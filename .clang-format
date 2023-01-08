@@ -1,0 +1,45 @@
+BasedOnStyle: LLVM
+IndentWidth: 2
+Standard: c++17
+AllowShortEnumsOnASingleLine: true
+BreakConstructorInitializers: BeforeComma
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: false
+  AfterStruct: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace : true
+  AfterControlStatement: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterClass: false
+IndentCaseLabels: true
+ColumnLimit: 120
+AlignAfterOpenBracket: DontAlign
+AlignTrailingComments: false
+SpacesBeforeTrailingComments: 2
+SortIncludes: true
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex:           '^".*'
+    Priority:        1
+  - Regex:           '^<sway/.*\.hpp>'
+    Priority:        2
+  - Regex:           '<(catch2|boost|gtest)\/'
+    Priority:        3
+  - Regex:           '^<.*'
+    Priority:        4
+    SortPriority:    4
+    CaseSensitive:   true
+IndentPPDirectives: AfterHash
+AlignEscapedNewlines: Left
+TypenameMacros:
+  - NAMESPACE_BEGIN
+  - NAMESPACE_END
+  - PURE_VIRTUAL
+  - MTHD_OVERRIDE
+  - DECLARE_EVENT
+  - TEST_F
+  - TEST
+AlwaysBreakTemplateDeclarations: true

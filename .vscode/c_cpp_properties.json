@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "name": "Mac",
+      "includePath": [
+        "${workspaceFolder}/lib/include",
+        "${workspaceFolder}/submodules/sway.module_core/lib/include",
+        "/Users/apriori85/Documents/Third-party/googletest/googletest/include",
+        "/Users/apriori85/Documents/Third-party/libpng"
+      ]
+    }
+  ],
+  "version": 4
+}

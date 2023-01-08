@@ -1,0 +1,26 @@
+Checks:
+  -*,
+  clang-diagnostic-*,
+  clang-analyzer-*,
+  cppcoreguildelines-*, -cppcoreguidelines-macro-usage,
+  -llvmlibc-callee-namespace,
+  misc-*,
+  modernize-*, -modernize-use-auto, -modernize-use-trailing-return-type,
+  readability-*
+CheckOptions:
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: _
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+  - key: cppcoreguidelines-special-member-functions.AllowMissingMoveFunctionsWhenCopyIsDeleted
+    value: true
+  - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+    value: true
+  - key: readability-redundant-member-init.IgnoreBaseInCopyConstructors
+    value: true

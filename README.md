@@ -16,5 +16,5 @@ cmake --build ./
 
 ```console
 # macos
-nm -g ./../bin/module_gapi_gl.dylib.*
+nm -g ./../bin/module_loader_png.dylib.*
 ```

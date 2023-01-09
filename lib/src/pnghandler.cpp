@@ -15,7 +15,7 @@ auto PNGHandler::loadFromStream(std::ifstream &source) -> ImageDescriptor {
   int isSignatureValid = 0;  // Результат проверки сигнатуры.
 
   // Считываем сигнатуру (первые PNG_SIGNATURE_SIZE байт).
-  source.read((char *)signature, PNG_SIGNATURE_SIZE);
+  source.read((s8_t *)signature, PNG_SIGNATURE_SIZE);
 
   // Проверяем на соответствие считанной нами сигнатуры с сигнатурой PNG-формата.
   isSignatureValid = png_sig_cmp(signature, 0, PNG_SIGNATURE_SIZE);

@@ -5,26 +5,25 @@
 
 #define LOADER_PLUGIN_EXPORT  // empty
 
-#define DECLARE_LOADER_PLUGIN(plugclass, plugname, version)                                                            \
-  extern "C" {                                                                                                         \
-  LOADER_PLUGIN_EXPORT sway::loader::png::LoaderPlugin *getPlugin() {                                                  \
-    static plugclass singleton;                                                                                        \
-    return &singleton;                                                                                                 \
-  }                                                                                                                    \
-  LOADER_PLUGIN_EXPORT sway::loader::png::LoaderPluginInfo exports = {{plugname, "", "", "", "", version}, getPlugin}; \
+#define DECLARE_LOADER_PLUGIN(plugclass, plugname, version)                                                   \
+  extern "C" {                                                                                                \
+  LOADER_PLUGIN_EXPORT sway::loader::png::LoaderPlugin *getInstance() {                                       \
+    static plugclass singleton;                                                                               \
+    return &singleton;                                                                                        \
+  }                                                                                                           \
+  LOADER_PLUGIN_EXPORT sway::core::PluginInfo pluginGetInfo() { return {plugname, "", "", "", "", version}; } \
+  LOADER_PLUGIN_EXPORT sway::loader::png::LoaderPluginInfo getExports() { return {getInstance}; }             \
   }
 
 NAMESPACE_BEGIN(sway)
 NAMESPACE_BEGIN(loader)
 NAMESPACE_BEGIN(png)
 
-class LoaderPlugin {
-public:
-};
+class LoaderPlugin {};
 
 typedef LoaderPlugin *(*LoaderPluginInitializeFunc_t)();
 
-struct LoaderPluginInfo : public core::PluginInfo {
+struct LoaderPluginInfo {
   LoaderPluginInitializeFunc_t plug;
 };
 

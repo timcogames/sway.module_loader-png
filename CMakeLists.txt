@@ -61,9 +61,9 @@ set(MODULE_LOADER_PNG_DIR ${CMAKE_CURRENT_LIST_DIR})
 # Добавляем пути для поиска хедеров
 include_directories("${GLUT_INCLUDE_DIRS}")
 include_directories("${MODULE_LOADER_PNG_DIR}/lib/include")
+include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_loader/include")
 include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_core/lib/include")
 include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_math/lib/include")
-include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_gapi/include")
 
 include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_platform-glx11/include")
 

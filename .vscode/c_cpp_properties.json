@@ -6,6 +6,7 @@
         "${workspaceFolder}/lib/include",
         "${workspaceFolder}/submodules/sway.module_loader/include",
         "${workspaceFolder}/submodules/sway.module_core/lib/include",
+        "${workspaceFolder}/submodules/sway.module_math/lib/include",
         "/Users/apriori85/Documents/Third-party/googletest/googletest/include",
         "/Users/apriori85/Documents/Third-party/libpng"
       ]

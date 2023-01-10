@@ -3,6 +3,7 @@
 
 #include <sway/core.hpp>
 #include <sway/loader.hpp>
+#include <sway/math.hpp>
 
 #include <png.h>
 
@@ -18,7 +19,7 @@ public:
 
   MTHD_OVERRIDE(auto loadFromStream(std::ifstream &source)->ImageDescriptor);
 
-  static void readData(png_structp png, png_bytep data, png_size_t length) {}
+  static void readData(png_structp png, png_bytep data, png_size_t length);
 
   static void error(png_structp png, png_const_charp message) {}
 
@@ -27,7 +28,11 @@ public:
 private:
   void readSignature_(std::ifstream &source);
 
+  auto createInfoStruct_(std::ifstream &source) -> png_infop;
+
   void create_(std::ifstream &source);
+
+  void getImageSizeInfo_(math::TSize<u32_t> &size);
 
   png_structp png_;
   png_infop info_;

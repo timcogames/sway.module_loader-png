@@ -3,6 +3,7 @@
 #include <iostream>
 
 #define PNG_SIGNATURE_SIZE 8  // Длина сигнатуры.
+#define PNG_INFOPP_NULL (png_infopp) nullptr
 
 NAMESPACE_BEGIN(sway)
 NAMESPACE_BEGIN(loader)
@@ -10,41 +11,53 @@ NAMESPACE_BEGIN(png)
 
 DECLARE_LOADER_PLUGIN(PNGPlugin, "png", core::Version(1))
 
+void PNGPlugin::readData(png_structp png, png_bytep data, png_size_t length) {
+  reinterpret_cast<std::istream *>(png_get_io_ptr(png))->read((s8_t *)data, length);
+}
+
 void PNGPlugin::readSignature_(std::ifstream &source) {
-  // png_byte signature[PNG_SIGNATURE_SIZE] = {0};  // Массив под сигнатуру.
-  std::array<png_byte, PNG_SIGNATURE_SIZE> signature = {0};
-  int isSignatureValid = 0;  // Результат проверки сигнатуры.
+  std::array<std::byte, PNG_SIGNATURE_SIZE> signature;
+  s32_t successed = 0;  // Результат проверки сигнатуры.
 
   // Считываем сигнатуру (первые PNG_SIGNATURE_SIZE байт).
   source.read((s8_t *)signature.data(), PNG_SIGNATURE_SIZE);
 
   // Проверяем на соответствие считанной нами сигнатуры с сигнатурой PNG-формата.
-  isSignatureValid = png_sig_cmp(signature.data(), 0, PNG_SIGNATURE_SIZE);
-  if (isSignatureValid != 0) {
+  successed = png_sig_cmp(reinterpret_cast<png_bytep>(signature.data()), 0, PNG_SIGNATURE_SIZE);
+  if (successed != 0) {
     source.close();
   }
+}
+
+// Выделяем память и инициализируем структуру с информацией о файле.
+auto PNGPlugin::createInfoStruct_(std::ifstream &source) -> png_infop {
+  auto infoPtr = png_create_info_struct(png_);
+  if (infoPtr == nullptr) {
+    png_destroy_read_struct(&png_, PNG_INFOPP_NULL, PNG_INFOPP_NULL);
+    source.close();
+  }
+
+  return infoPtr;
 }
 
 void PNGPlugin::create_(std::ifstream &source) {
   // Выделяем память и инициализируем структуру для работы с файлом.
   png_ = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, PNGPlugin::error, PNGPlugin::warning);
-  if (!png_) {
+  if (png_ == nullptr) {
     source.close();
   }
 
-  // Выделяем память и инициализируем структуру с информацией о файле.
-  info_ = png_create_info_struct(png_);
-  if (!info_) {
-    png_destroy_read_struct(&png_, (png_infopp) nullptr, (png_infopp) nullptr);
-    source.close();
-  }
-
-  // Выделяем память и инициализируем структуру с информацией о файле.
+  info_ = createInfoStruct_(source);
   endInfo_ = png_create_info_struct(png_);
-  if (!endInfo_) {
-    png_destroy_read_struct(&png_, &info_, (png_infopp) nullptr);
+  if (endInfo_ == nullptr) {
+    png_destroy_read_struct(&png_, &info_, PNG_INFOPP_NULL);
     source.close();
   }
+}
+
+void PNGPlugin::getImageSizeInfo_(math::TSize<u32_t> &size) {
+  size.setW(png_get_image_width(png_, info_));  // Ширина изображения в пикселях.
+  size.setH(png_get_image_height(png_, info_));  // Высота изображения в пикселях.
 }
 
 auto PNGPlugin::loadFromStream(std::ifstream &source) -> ImageDescriptor {
@@ -58,12 +71,14 @@ auto PNGPlugin::loadFromStream(std::ifstream &source) -> ImageDescriptor {
   }
 
   png_set_read_fn(png_, (png_voidp)&source, PNGPlugin::readData);  // Устанавливаем собственную функцию чтения данных.
+
   png_set_sig_bytes(png_,
-      PNG_SIGNATURE_SIZE);  // Сообщаем Libpng, что мы уже прочитали PNG_SIGNATURE_SIZE байт, когда проверяли сигнатуру.
+      PNG_SIGNATURE_SIZE);  // Сообщаем Libpng, что мы уже прочитали PNG_SIGNATURE_SIZE байт, когда проверяли
+  //     сигнатуру.
   png_read_info(png_, info_);  // Читаем информацию о данных изображения.
 
-  u32_t width = png_get_image_width(png_, info_);  // Ширина изображения в пикселях.
-  u32_t height = png_get_image_height(png_, info_);  // Высота изображения в пикселях.
+  math::TSize<u32_t> size;
+  getImageSizeInfo_(size);
 
   int bitDepth = png_get_bit_depth(png_, info_);  // Глубина цвета.
   int colorType = png_get_color_type(png_, info_);
@@ -112,33 +127,32 @@ auto PNGPlugin::loadFromStream(std::ifstream &source) -> ImageDescriptor {
   int rowBytes = png_get_rowbytes(png_, info_);
 
   // Выделяем памяти под данные изображения.
-  auto *tempData = (u8_t *)malloc(rowBytes * height);
-  if (!tempData) {
+  auto *imageData = (u8_t *)malloc(rowBytes * size.getH());
+  if (!imageData) {
     png_destroy_read_struct(&png_, &info_, &endInfo_);
-    free(tempData);
+    free(imageData);
     source.close();
   }
 
   // Выделяем память под указатели на каждую строку.
-  png_bytep *rowPointers = new png_bytep[height];
-  if (!rowPointers) {
+  png_bytep *rowPointers = new png_bytep[size.getH()];
+  if (rowPointers == nullptr) {
     png_destroy_read_struct(&png_, &info_, &endInfo_);
-    free(tempData);
+    free(imageData);
     SAFE_DELETE_ARRAY(rowPointers);
     source.close();
   }
 
-  for (u32_t i = 0; i < height; ++i) {
-    rowPointers[i] = &tempData[i * rowBytes];
+  for (u32_t row = 0; row < size.getH(); ++row) {
+    rowPointers[row] = &imageData[row * rowBytes];
   }
 
   png_read_image(png_, rowPointers);  // Читаем изображение.
   png_read_end(png_, endInfo_);
 
   ImageDescriptor descriptor = {};
-  descriptor.pixels = tempData;
-  descriptor.width = width;
-  descriptor.height = height;
+  descriptor.data = imageData;
+  descriptor.size = size;
   descriptor.bpp = channels * bitDepth;
   // descriptor.type = (bitDepth == 16) ? UInt16 : UByte;
   // descriptor.internalFormat = RGBA8;

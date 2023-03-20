@@ -32,7 +32,7 @@ private:
 
   void create_(std::ifstream &source);
 
-  void getImageSizeInfo_(math::TSize<u32_t> &size);
+  void getImageSizeInfo_(math::Size<u32_t> &size);
 
   png_structp png_;
   png_infop info_;

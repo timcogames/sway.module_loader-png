@@ -55,7 +55,7 @@ void PNGPlugin::create_(std::ifstream &source) {
   }
 }
 
-void PNGPlugin::getImageSizeInfo_(math::TSize<u32_t> &size) {
+void PNGPlugin::getImageSizeInfo_(math::Size<u32_t> &size) {
   size.setW(png_get_image_width(png_, info_));  // Ширина изображения в пикселях.
   size.setH(png_get_image_height(png_, info_));  // Высота изображения в пикселях.
 }
@@ -77,7 +77,7 @@ auto PNGPlugin::loadFromStream(std::ifstream &source) -> ImageDescriptor {
   //     сигнатуру.
   png_read_info(png_, info_);  // Читаем информацию о данных изображения.
 
-  math::TSize<u32_t> size;
+  math::Size<u32_t> size;
   getImageSizeInfo_(size);
 
   int bitDepth = png_get_bit_depth(png_, info_);  // Глубина цвета.

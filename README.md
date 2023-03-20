@@ -4,6 +4,8 @@
 
 ```console
 cmake -DCMAKE_BUILD_TYPE=Release -DMODULE_LOADER_PNG_SHARED_LIB=ON ../
+
+cmake -DCMAKE_BUILD_TYPE=Release -DCUSTOM_EMSCRIPTEN_ROOT_DIR=/Users/apriori85/Documents/Third-party/emsdk/upstream/emscripten -DGLOBAL_EMSCRIPTEN_PLATFORM=ON -DMODULE_LOADER_PNG_SHARED_LIB=ON -DMODULE_LOADER_PNG_MT=ON ../
 ```
 
 #### Запускаем сборку

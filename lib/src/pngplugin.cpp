@@ -72,9 +72,8 @@ auto PNGPlugin::loadFromStream(std::ifstream &source) -> ImageDescriptor {
 
   png_set_read_fn(png_, (png_voidp)&source, PNGPlugin::readData);  // Устанавливаем собственную функцию чтения данных.
 
-  png_set_sig_bytes(png_,
-      PNG_SIGNATURE_SIZE);  // Сообщаем Libpng, что мы уже прочитали PNG_SIGNATURE_SIZE байт, когда проверяли
-  //     сигнатуру.
+  // Сообщаем Libpng, что мы уже прочитали PNG_SIGNATURE_SIZE байт, когда проверяли сигнатуру.
+  png_set_sig_bytes(png_, PNG_SIGNATURE_SIZE);
   png_read_info(png_, info_);  // Читаем информацию о данных изображения.
 
   math::Size<u32_t> size;
@@ -123,35 +122,37 @@ auto PNGPlugin::loadFromStream(std::ifstream &source) -> ImageDescriptor {
 
   png_read_update_info(png_, info_);  // Обновляем информацию структуры png.
 
-  // Получаем кол-во байтов необходимых для вмещения преобразованного ряда.
+  // Получаем кол.-во байтов необходимых для вмещения преобразованного ряда.
   int rowBytes = png_get_rowbytes(png_, info_);
 
-  // Выделяем памяти под данные изображения.
-  auto *imageData = (u8_t *)malloc(rowBytes * size.getH());
-  if (!imageData) {
+  auto imgBufLen = rowBytes * size.getH();
+  // Выделяем память под данные изображения.
+  auto *imgBufData = (u8_t *)malloc(imgBufLen);
+  if (imgBufData == nullptr) {
     png_destroy_read_struct(&png_, &info_, &endInfo_);
-    free(imageData);
+    free(imgBufData);
     source.close();
   }
 
   // Выделяем память под указатели на каждую строку.
-  png_bytep *rowPointers = new png_bytep[size.getH()];
+  auto *rowPointers = new png_bytep[size.getH()];
   if (rowPointers == nullptr) {
     png_destroy_read_struct(&png_, &info_, &endInfo_);
-    free(imageData);
+    free(imgBufData);
     SAFE_DELETE_ARRAY(rowPointers);
     source.close();
   }
 
-  for (u32_t row = 0; row < size.getH(); ++row) {
-    rowPointers[row] = &imageData[row * rowBytes];
+  for (auto row = 0; row < size.getH(); ++row) {
+    rowPointers[row] = &imgBufData[row * rowBytes];
   }
 
   png_read_image(png_, rowPointers);  // Читаем изображение.
   png_read_end(png_, endInfo_);
 
   ImageDescriptor descriptor = {};
-  descriptor.data = imageData;
+  descriptor.buf.data = imgBufData;
+  descriptor.buf.len = imgBufLen;
   descriptor.size = size;
   descriptor.bpp = channels * bitDepth;
   // descriptor.type = (bitDepth == 16) ? UInt16 : UByte;

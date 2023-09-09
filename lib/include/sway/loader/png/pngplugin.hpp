@@ -17,7 +17,8 @@ public:
 
   virtual ~PNGPlugin() = default;
 
-  MTHD_OVERRIDE(auto loadFromStream(std::ifstream &source)->ImageDescriptor);
+  // clang-format off
+  MTHD_OVERRIDE(auto loadFromStream(std::ifstream &source) -> ImageDescriptor);  // clang-format on
 
   static void readData(png_structp png, png_bytep data, png_size_t length);
 

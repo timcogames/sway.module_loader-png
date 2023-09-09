@@ -18,6 +18,7 @@ option(MODULE_LOADER_PNG_MT "Enable multithreading" OFF)
 option(MODULE_LOADER_PNG_ENABLE_COVERAGE "Enable coverage builds" OFF)
 option(MODULE_LOADER_PNG_ENABLE_TESTS "Enable test builds" OFF)
 option(GLOBAL_EMSCRIPTEN_PLATFORM "Using emscripten compiler" OFF)
+option(GLOBAL_EMSCRIPTEN_PLATFORM_USE_BINDING "Using emscripten binding" OFF)
 option(CUSTOM_EMSCRIPTEN_ROOT_DIR "Emscripten root directory" OFF)
 option(CUSTOM_GTEST_ROOT_DIR "GTest root directory" OFF)
 
@@ -55,7 +56,13 @@ if (GLOBAL_EMSCRIPTEN_PLATFORM)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -sFULL_ES3=1")
 endif ()
 
-set(PNG_LIBRARY "/Users/apriori85/Documents/Third-party/libpng")
+# set(CMAKE_EXE_LINKER_FLAGS "-L/usr/local/lib -L/usr/lib ${CMAKE_EXE_LINKER_FLAGS} -lpng")
+# set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS})
+# string(REGEX REPLACE "-lpng" "/opt/homebrew/Cellar/libpng/1.6.40/lib/libpng.a" CMAKE_MAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS})
+
+set(PNG_LIBRARY "/opt/homebrew/Cellar/libpng/1.6.40/lib")
+# set(PNG_LIBRARY "/opt/homebrew/Cellar/libpng/1.6.40/lib/libpng.a")
+# set(PNG_LIBRARY "/opt/homebrew/Cellar/libpng/1.6.40/lib/libpng.dylib")
 set(PNG_PNG_INCLUDE_DIR "/Users/apriori85/Documents/Third-party/libpng")
 find_package(PNG 1.6 REQUIRED)
 include_directories(${PNG_INCLUDE_DIR})
@@ -63,7 +70,7 @@ include_directories(${PNG_INCLUDE_DIR})
 message("[${META_LOADER_PNG_PRJNAME}]: ${META_LOADER_PNG_VERSION}
          compiler | ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
        build type | ${CMAKE_BUILD_TYPE}
-       shared lib | ${MODULE_CORE_SHARED_LIB}
+       shared lib | ${MODULE_LOADER_PNG_SHARED_LIB}
          cxxflags | ${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}
  build type flags | ${BUILD_TYPE_CXX_FLAGS}
         build dir | ${CMAKE_BINARY_DIR}
@@ -95,24 +102,22 @@ include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_loader/incl
 include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_core/lib/include")
 include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_math/lib/include")
 
-include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_platform-glx11/include")
-
 # Получаем пути ко всем хедерам и исходникам библиотеки
 file(GLOB_RECURSE MODULE_LOADER_PNG_HEADERS "${MODULE_LOADER_PNG_DIR}/lib/include/*.*")
 file(GLOB_RECURSE MODULE_LOADER_PNG_SOURCES "${MODULE_LOADER_PNG_DIR}/lib/src/*.*")
 
 if (MODULE_LOADER_PNG_SHARED_LIB)
-  # set(CMAKE_CXX_COMPILER "g++")
-  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -Werror -pedantic")
-  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-return-type -Wno-int-to-pointer-cast -Wno-variadic-macros -Wno-null-pointer-arithmetic")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIE -fvisibility=hidden")
 
   # Добавляем в проект цель для сборки динамической библиотеки
   add_library(${META_LOADER_PNG_LIBNAME} SHARED ${MODULE_LOADER_PNG_SOURCES})
   set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES OUTPUT_NAME ${META_LOADER_PNG_PRJNAME})
   set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES PREFIX "")
-  set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES SUFFIX ".wasm")
-  # set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES SUFFIX ".dylib.${META_LOADER_PNG_VERSION}")
+  if (GLOBAL_EMSCRIPTEN_PLATFORM)
+    set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES SUFFIX ".wasm")
+  else ()
+    set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES SUFFIX ".dylib.${META_LOADER_PNG_VERSION}")
+  endif ()
   target_compile_definitions(${META_LOADER_PNG_LIBNAME} PRIVATE -DBUILD_DLLAPI_LIBMODULE)
 else ()
   # Добавляем в проект цель для сборки статической библиотеки

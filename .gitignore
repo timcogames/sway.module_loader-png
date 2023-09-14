@@ -1,2 +1,7 @@
+# project output files
 /build
 /bin
+
+# osx noise
+.DS_Store
+profile

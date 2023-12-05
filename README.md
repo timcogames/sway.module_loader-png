@@ -3,14 +3,14 @@
 #### Конфигурируем проект для Google тестов
 
 ```console
-cmake -DCMAKE_BUILD_TYPE=Release \
-      -DMODULE_LOADER_PNG_SHARED_LIB=ON ../
+cmake -D CMAKE_BUILD_TYPE=Release \
+      -D MODULE_LOADER_PNG_SHARED_LIB=ON ../
 
-cmake -DCMAKE_BUILD_TYPE=Release \
-      -DCUSTOM_EMSCRIPTEN_ROOT_DIR=/Users/apriori85/Documents/Third-party/emsdk/upstream/emscripten \
-      -DGLOBAL_EMSCRIPTEN_PLATFORM=ON \
-      -DMODULE_LOADER_PNG_SHARED_LIB=ON \
-      -DMODULE_LOADER_PNG_MT=ON ../
+cmake -D CMAKE_BUILD_TYPE=Release \
+      -D GLOB_EMSCRIPTEN_ROOT_DIR=/Users/<USER_NAME>/Documents/Third-party/emsdk/upstream/emscripten \
+      -D GLOB_EMSCRIPTEN_PLATFORM=ON \
+      -D MODULE_LOADER_PNG_SHARED_LIB=ON \
+      -D MODULE_LOADER_PNG_MT=ON ../
 ```
 
 #### Запускаем сборку

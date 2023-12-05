@@ -1,44 +1,74 @@
-# Проверяем версию CMake
+#---------------------------------------------------------------------------------
+# CMake version
+#---------------------------------------------------------------------------------
+
 cmake_minimum_required(VERSION 3.14.3 FATAL_ERROR)
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/submodules/sway.module_core/cmakehelpers/custom_enable_cxx17.cmake")
-include("${CMAKE_CURRENT_SOURCE_DIR}/submodules/sway.module_core/cmakehelpers/custom_add_subdirectory.cmake")
+#---------------------------------------------------------------------------------
+# Project directories
+#---------------------------------------------------------------------------------
 
-# Мета-информация о проекте
-set(META_LOADER_PNG_PRJNAME "module_loader_png")
-set(META_LOADER_PNG_LIBNAME "lib${META_LOADER_PNG_PRJNAME}")
-set(META_LOADER_PNG_VERSION_MAJOR 0)
-set(META_LOADER_PNG_VERSION_MINOR 1)
-set(META_LOADER_PNG_VERSION_PATCH 0)
-set(META_LOADER_PNG_VERSION ${META_LOADER_PNG_VERSION_MAJOR}.${META_LOADER_PNG_VERSION_MINOR}.${META_LOADER_PNG_VERSION_PATCH})
+set(MODULE_LOADER_PNG_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(MODULE_LOADER_PNG_LIST_DIR "${CMAKE_CURRENT_LIST_DIR}")
+set(MODULE_LOADER_PNG_CMAKE_DIR "${MODULE_LOADER_PNG_ROOT_DIR}/submodules/sway.module_core/cmake_modules")
+set(MODULE_LOADER_PNG_LIB_DIR "${MODULE_LOADER_PNG_ROOT_DIR}/lib")
+set(MODULE_LOADER_PNG_BIN_DIR "${CMAKE_SOURCE_DIR}/bin")
 
+#---------------------------------------------------------------------------------
+# Include CMake modules
+#---------------------------------------------------------------------------------
+
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/options.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/set_output_dir.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/project_metadata.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/enable_cxx17.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/add_submodule.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/clang/create_library.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/emscripten/setup.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/emscripten/create_bitcode.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/emscripten/create_library.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/emscripten/gen_target_name.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/emscripten/set_optimization.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/emscripten/set_environment.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/emscripten/set_compilation.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/emscripten/set_modularize.cmake")
+
+#---------------------------------------------------------------------------------
 # Опции сборки
+#---------------------------------------------------------------------------------
+
 option(MODULE_LOADER_PNG_SHARED_LIB "Build shared library (.so)" OFF)
 option(MODULE_LOADER_PNG_MT "Enable multithreading" OFF)
 option(MODULE_LOADER_PNG_ENABLE_COVERAGE "Enable coverage builds" OFF)
 option(MODULE_LOADER_PNG_ENABLE_TESTS "Enable test builds" OFF)
-option(GLOBAL_EMSCRIPTEN_PLATFORM "Using emscripten compiler" OFF)
-option(GLOBAL_EMSCRIPTEN_PLATFORM_USE_BINDING "Using emscripten binding" OFF)
-option(CUSTOM_EMSCRIPTEN_ROOT_DIR "Emscripten root directory" OFF)
-option(CUSTOM_GTEST_ROOT_DIR "GTest root directory" OFF)
 
-if (NOT DEFINED CMAKE_TOOLCHAIN_FILE AND GLOBAL_EMSCRIPTEN_PLATFORM)
-  set(CMAKE_TOOLCHAIN_FILE "${CUSTOM_EMSCRIPTEN_ROOT_DIR}/cmake/Modules/Platform/Emscripten.cmake")
-  include(${CMAKE_TOOLCHAIN_FILE})
-endif ()
+#---------------------------------------------------------------------------------
+# [EMSCRIPTEN]: Setup
+#---------------------------------------------------------------------------------
 
-if (NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build" FORCE)
-endif ()
+if(GLOB_EMSCRIPTEN_PLATFORM)
+  emscripten_setup()
+endif()
 
-project(${META_LOADER_PNG_PRJNAME} VERSION ${META_LOADER_PNG_VERSION} LANGUAGES CXX)
+#---------------------------------------------------------------------------------
+# Project
+#---------------------------------------------------------------------------------
 
-# Подмодули
-custom_add_subdirectory("libmodule_core" submodules/sway.module_core)
+project_metadata("loader_png" 0.1.0)
+project(${MODULE_LOADER_PNG_PROJ_NAME} VERSION ${MODULE_LOADER_PNG_VERSION} LANGUAGES CXX)
 
-if (GLOBAL_EMSCRIPTEN_PLATFORM)
+#---------------------------------------------------------------------------------
+# Submodules
+#---------------------------------------------------------------------------------
+
+add_submodule("module_core" submodules/sway.module_core)
+
+
+
+
+if (GLOB_EMSCRIPTEN_PLATFORM)
   set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
-  set(CMAKE_CXX_COMPILER "${CUSTOM_EMSCRIPTEN_ROOT_DIR}/em++")
+  set(CMAKE_CXX_COMPILER "${GLOB_EMSCRIPTEN_ROOT_DIR}/em++")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -Wall -std=c++17 -shared -dynamiclib")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas -Wno-unicode-whitespace \
       -Wno-unused-local-typedef -Wno-invalid-noreturn -Wno-unused-command-line-argument")
@@ -63,14 +93,14 @@ endif ()
 # set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS})
 # string(REGEX REPLACE "-lpng" "/opt/homebrew/Cellar/libpng/1.6.40/lib/libpng.a" CMAKE_MAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS})
 
-# set(PNG_LIBRARY "/opt/homebrew/Cellar/libpng/1.6.40/lib")
+set(PNG_LIBRARY "/opt/homebrew/Cellar/libpng/1.6.40/lib")
 # set(PNG_LIBRARY "/opt/homebrew/Cellar/libpng/1.6.40/lib/libpng.a")
-set(PNG_LIBRARY "/opt/homebrew/Cellar/libpng/1.6.40/lib/libpng.dylib")
+# set(PNG_LIBRARY "/opt/homebrew/Cellar/libpng/1.6.40/lib/libpng.dylib")
 set(PNG_PNG_INCLUDE_DIR "/Users/apriori85/Documents/Third-party/libpng")
 find_package(PNG 1.6 REQUIRED)
 include_directories(${PNG_INCLUDE_DIR})
 
-message("[${META_LOADER_PNG_PRJNAME}]: ${META_LOADER_PNG_VERSION}
+message("[${MODULE_LOADER_PNG_PROJ_NAME}]: ${MODULE_LOADER_PNG_VERSION}
          compiler | ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
        build type | ${CMAKE_BUILD_TYPE}
        shared lib | ${MODULE_LOADER_PNG_SHARED_LIB}
@@ -79,20 +109,19 @@ message("[${META_LOADER_PNG_PRJNAME}]: ${META_LOADER_PNG_VERSION}
         build dir | ${CMAKE_BINARY_DIR}
    install prefix | ${CMAKE_INSTALL_PREFIX}
 
-        gtest dir | ${CUSTOM_GTEST_ROOT_DIR}
+        gtest dir | ${GLOB_GTEST_ROOT_DIR}
 
          coverage | ${MODULE_LOADER_PNG_ENABLE_COVERAGE}
             tests | ${MODULE_LOADER_PNG_ENABLE_TESTS}
 ")
 
+#---------------------------------------------------------------------------------
 # Определяем каталог вывода по умолчанию
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-  set(LIBRARY_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin/dbg")
-  set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin/dbg")
-else ()
-  set(LIBRARY_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin")
-  set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin")
-endif ()
+#---------------------------------------------------------------------------------
+
+set_output_dir(${MODULE_LOADER_PNG_BIN_DIR})
+
+
 
 set(GLUT_INCLUDE_DIRS "/opt/X11/include")
 set(GLUT_LIBRARY_DIRS "/opt/X11/lib")
@@ -102,8 +131,8 @@ set(MODULE_LOADER_PNG_DIR ${CMAKE_CURRENT_LIST_DIR})
 include_directories("${GLUT_INCLUDE_DIRS}")
 include_directories("${MODULE_LOADER_PNG_DIR}/lib/include")
 include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_loader/include")
-include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_core/lib/include")
-include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_math/lib/include")
+include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_core/lib/cxx/include")
+include_directories("${MODULE_LOADER_PNG_DIR}/submodules/sway.module_math/lib/cxx/include")
 
 # Получаем пути ко всем хедерам и исходникам библиотеки
 file(GLOB_RECURSE MODULE_LOADER_PNG_HEADERS "${MODULE_LOADER_PNG_DIR}/lib/include/*.*")
@@ -113,32 +142,32 @@ if (MODULE_LOADER_PNG_SHARED_LIB)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIE -fvisibility=hidden")
 
   # Добавляем в проект цель для сборки динамической библиотеки
-  add_library(${META_LOADER_PNG_LIBNAME} SHARED ${MODULE_LOADER_PNG_SOURCES})
-  set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES OUTPUT_NAME ${META_LOADER_PNG_PRJNAME})
-  set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES PREFIX "")
-  if (GLOBAL_EMSCRIPTEN_PLATFORM)
-    set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES SUFFIX ".wasm")
+  add_library(${MODULE_LOADER_PNG_TARGET} SHARED ${MODULE_LOADER_PNG_SOURCES})
+  set_target_properties(${MODULE_LOADER_PNG_TARGET} PROPERTIES OUTPUT_NAME ${MODULE_LOADER_PNG_PROJ_NAME})
+  set_target_properties(${MODULE_LOADER_PNG_TARGET} PROPERTIES PREFIX "")
+  if (GLOB_EMSCRIPTEN_PLATFORM)
+    set_target_properties(${MODULE_LOADER_PNG_TARGET} PROPERTIES SUFFIX ".wasm")
   else ()
-    set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES SUFFIX ".dylib.${META_LOADER_PNG_VERSION}")
+    set_target_properties(${MODULE_LOADER_PNG_TARGET} PROPERTIES SUFFIX ".dylib.${MODULE_LOADER_PNG_VERSION}")
   endif ()
-  target_compile_definitions(${META_LOADER_PNG_LIBNAME} PRIVATE -DBUILD_DLLAPI_LIBMODULE)
+  target_compile_definitions(${MODULE_LOADER_PNG_TARGET} PRIVATE -DBUILD_DLLAPI_LIBMODULE)
 else ()
   # Добавляем в проект цель для сборки статической библиотеки
-  add_library(${META_LOADER_PNG_LIBNAME} STATIC ${MODULE_LOADER_PNG_SOURCES})
-  set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES OUTPUT_NAME ${META_LOADER_PNG_PRJNAME})
-  set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES PREFIX "")
-  set_target_properties(${META_LOADER_PNG_LIBNAME} PROPERTIES SUFFIX ".a.${META_LOADER_PNG_VERSION}")
+  add_library(${MODULE_LOADER_PNG_TARGET} STATIC ${MODULE_LOADER_PNG_SOURCES})
+  set_target_properties(${MODULE_LOADER_PNG_TARGET} PROPERTIES OUTPUT_NAME ${MODULE_LOADER_PNG_PROJ_NAME})
+  set_target_properties(${MODULE_LOADER_PNG_TARGET} PROPERTIES PREFIX "")
+  set_target_properties(${MODULE_LOADER_PNG_TARGET} PROPERTIES SUFFIX ".a.${MODULE_LOADER_PNG_VERSION}")
 endif ()
 
-custom_enable_cxx17(${META_LOADER_PNG_LIBNAME})
-target_link_libraries(${META_LOADER_PNG_LIBNAME} libmodule_core ${PNG_LIBRARY})
+enable_cxx17(${MODULE_LOADER_PNG_TARGET})
+target_link_libraries(${MODULE_LOADER_PNG_TARGET} module_core ${PNG_LIBRARY})
 
 # Добавляем построение тестов
 if (MODULE_LOADER_PNG_ENABLE_TESTS)
   if (MODULE_LOADER_PNG_SHARED_LIB)
-    message(STATUS "[${META_LOADER_PNG_PRJNAME}]: Tests are only allowed with a static lib")
+    message(STATUS "[${MODULE_LOADER_PNG_PROJ_NAME}]: Tests are only allowed with a static lib")
   else ()
-    message(STATUS "[${META_LOADER_PNG_PRJNAME}]: Tests have been enabled")
+    message(STATUS "[${MODULE_LOADER_PNG_PROJ_NAME}]: Tests have been enabled")
     add_subdirectory(lib/tests/google)
   endif ()
 endif ()

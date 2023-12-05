@@ -1,7 +1,8 @@
 #### Конфигурируем проект для Google тестов
 
 ```console
-cmake -DCUSTOM_GTEST_ROOT_DIR=/Users/apriori85/Documents/Third-party/googletest -DMODULE_LOADER_PNG_ENABLE_TESTS=ON ../
+cmake -D GLOB_GTEST_ROOT_DIR=/Users/<USER_NAME>/Documents/Third-party/googletest \
+      -D MODULE_LOADER_PNG_ENABLE_TESTS=ON ../
 ```
 
 #### Запускаем сборку

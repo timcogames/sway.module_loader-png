@@ -31,7 +31,7 @@ void PNGPlugin::readSignature_(std::ifstream &source) {
 
 // Выделяем память и инициализируем структуру с информацией о файле.
 auto PNGPlugin::createInfoStruct_(std::ifstream &source) -> png_infop {
-  auto infoPtr = png_create_info_struct(png_);
+  auto *infoPtr = png_create_info_struct(png_);
   if (infoPtr == nullptr) {
     png_destroy_read_struct(&png_, PNG_INFOPP_NULL, PNG_INFOPP_NULL);
     source.close();
@@ -79,8 +79,8 @@ auto PNGPlugin::loadFromStream(std::ifstream &source) -> ImageDescriptor {
   math::Size<u32_t> size;
   getImageSizeInfo_(size);
 
-  int bitDepth = png_get_bit_depth(png_, info_);  // Глубина цвета.
-  int colorType = png_get_color_type(png_, info_);
+  const int bitDepth = png_get_bit_depth(png_, info_);  // Глубина цвета.
+  const int colorType = png_get_color_type(png_, info_);
   // int interlaceMethod = png_get_interlace_type(png_, info_);
   // int compressionMethod = png_get_compression_type(png_, info_);
   // int filterMethod = png_get_filter_type(png_, info_);
@@ -123,7 +123,7 @@ auto PNGPlugin::loadFromStream(std::ifstream &source) -> ImageDescriptor {
   png_read_update_info(png_, info_);  // Обновляем информацию структуры png.
 
   // Получаем кол.-во байтов необходимых для вмещения преобразованного ряда.
-  int rowBytes = png_get_rowbytes(png_, info_);
+  const int rowBytes = png_get_rowbytes(png_, info_);
 
   auto imgBufLen = rowBytes * size.getH();
   // Выделяем память под данные изображения.

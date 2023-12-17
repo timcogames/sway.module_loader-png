@@ -3,7 +3,7 @@
     {
       "name": "Mac",
       "includePath": [
-        "${workspaceFolder}/lib/include",
+        "${workspaceFolder}/lib/cxx/include",
         "${workspaceFolder}/submodules/sway.module_loader/include",
         "${workspaceFolder}/submodules/sway.module_core/lib/cxx/include",
         "${workspaceFolder}/submodules/sway.module_math/lib/cxx/include",

@@ -38,8 +38,9 @@ include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/emscripten/set_modulari
 # Опции сборки
 #---------------------------------------------------------------------------------
 
+option(GLOB_LIBPNG_ROOT_DIR "" OFF)
+
 option(MODULE_LOADER_PNG_SHARED_LIB "Build shared library (.so)" OFF)
-option(MODULE_LOADER_PNG_LIBPNG_DIR "" OFF)
 option(MODULE_LOADER_PNG_ENVIRONMENT "Environment variable" OFF)
 option(MODULE_LOADER_PNG_COMPILATION "Compilation variable" OFF)
 option(MODULE_LOADER_PNG_MT "Enable multithreading" OFF)

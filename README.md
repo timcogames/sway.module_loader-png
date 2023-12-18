@@ -3,7 +3,7 @@
 #### Конфигурируем проект для Google тестов
 
 ```console
-cmake --preset default -B build
+cmake --preset emscripten-dynamic-mt -B build
 
 # deprecated
 cmake -D CMAKE_BUILD_TYPE=Release \
@@ -29,7 +29,7 @@ cmake -D CMAKE_BUILD_TYPE=Release \
 #### Запускаем сборку
 
 ```console
-cmake --build build --preset Debug
+cmake --build build --preset default-emscripten-dynamic-mt-release
 
 # deprecated
 cmake --build ./

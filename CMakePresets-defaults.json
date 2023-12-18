@@ -2,23 +2,14 @@
   "version": 6,
   "configurePresets": [
     {
-      "name": "default",
-      "displayName": "Emscripten",
+      "name": "base",
+      "hidden": true,
       "binaryDir": "build",
       "generator": "Unix Makefiles",
-      "toolchainFile": "/Users/apriori85/Documents/Third-party/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": {
-          "type": "STRING",
-          "value": "Release"
-        },
         "GLOB_EMSCRIPTEN_ROOT_DIR": {
           "type": "FILEPATH",
           "value": "/Users/apriori85/Documents/Third-party/emsdk/upstream/emscripten"
-        },
-        "GLOB_EMSCRIPTEN_PLATFORM": {
-          "type": "STRING",
-          "value": "ON"
         },
         "GLOB_LIBPNG_ROOT_DIR": {
           "type": "FILEPATH",
@@ -26,19 +17,19 @@
         },
         "GLOB_GTEST_ROOT_DIR": {
           "type": "FILEPATH",
-          "value": ""
+          "value": "/Users/apriori85/Documents/Third-party/googletest/googletest"
         },
         "GLOB_GMOCK_ROOT_DIR": {
           "type": "FILEPATH",
-          "value": ""
+          "value": "/Users/apriori85/Documents/Third-party/googletest/googlemock"
         },
         "GLOB_GTEST_LIB_DIR": {
           "type": "FILEPATH",
-          "value": ""
+          "value": "/Users/apriori85/Documents/Third-party/googletest/build/lib"
         },
         "GLOB_GMOCK_LIB_DIR": {
           "type": "FILEPATH",
-          "value": ""
+          "value": "/Users/apriori85/Documents/Third-party/googletest/build/lib"
         },
         "MODULE_CORE_ENVIRONMENT": {
           "type": "STRING",
@@ -47,6 +38,22 @@
         "MODULE_CORE_COMPILATION": {
           "type": "STRING",
           "value": "async"
+        }
+      }
+    },
+    {
+      "name": "emscripten-dynamic-mt-debug",
+      "displayName": "Emscripten Dynamic MT Debug",
+      "inherits": "base",
+      "toolchainFile": "/Users/apriori85/Documents/Third-party/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        },
+        "GLOB_EMSCRIPTEN_PLATFORM": {
+          "type": "BOOL",
+          "value": true
         },
         "MODULE_LOADER_PNG_ENVIRONMENT": {
           "type": "STRING",
@@ -77,18 +84,67 @@
           "value": false
         }
       }
+    },
+    {
+      "name": "emscripten-dynamic-mt-release",
+      "displayName": "Emscripten Dynamic MT Release",
+      "inherits": "emscripten-dynamic-mt-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        }
+      }
+    },
+    {
+      "name": "macos-static-mt-debug",
+      "displayName": "macos Dynamic MT Debug",
+      "inherits": "emscripten-dynamic-mt-debug",
+      "toolchainFile": "",
+      "cacheVariables": {
+        "GLOB_EMSCRIPTEN_PLATFORM": {
+          "type": "BOOL",
+          "value": false
+        },
+        "MODULE_LOADER_PNG_SHARED_LIB": {
+          "type": "BOOL",
+          "value": false
+        },
+        "MODULE_LOADER_PNG_ENABLE_TESTS": {
+          "type": "BOOL",
+          "value": true
+        }
+      }
     }
   ],
   "buildPresets": [
     {
-      "name": "Debug",
-      "configurePreset": "default",
+      "name": "default-emscripten-dynamic-mt-debug",
+      "displayName": "Default",
+      "configurePreset": "emscripten-dynamic-mt-debug",
       "configuration": "Debug"
     },
     {
-      "name": "Release",
-      "configurePreset": "default",
+      "name": "default-emscripten-dynamic-mt-release",
+      "displayName": "Default",
+      "configurePreset": "emscripten-dynamic-mt-release",
       "configuration": "Release"
+    },
+    {
+      "name": "default-macos-static-mt-debug",
+      "displayName": "Default",
+      "configurePreset": "macos-static-mt-debug",
+      "configuration": "Debug"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "default-test-macos",
+      "description": "Enable output on failure",
+      "configurePreset": "macos-static-mt-debug",
+      "output": {
+        "outputOnFailure": true
+      }
     }
   ]
 }

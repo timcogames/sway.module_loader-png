@@ -132,8 +132,6 @@ else()
   # target_link_libraries(${MODULE_LOADER_PNG_TARGET} X11 GL module_core)
 endif()
 
-enable_cxx17(${MODULE_LOADER_PNG_TARGET})
-
 if(GLOB_EMSCRIPTEN_PLATFORM)
   create_emscripten_library(${MODULE_LOADER_PNG_TARGET} ${MODULE_LOADER_PNG_ENVIRONMENT} ${MODULE_LOADER_PNG_COMPILATION} OUTPUT_TARGET_NAME_LIST)
 
@@ -182,14 +180,19 @@ if(GLOB_EMSCRIPTEN_PLATFORM)
         "SHELL:-s PTHREAD_POOL_SIZE=8"
         "SHELL:-s IMPORTED_MEMORY=1")
     endif()
+
+    enable_cxx17(${target})
+
+    target_link_directories(${target} PRIVATE ${PNG_LIBRARY})
+    target_link_libraries(${target} module_core png)
+
     printf_link_options(${target})
   endforeach()
 else()
-  # create_library(${MODULE_LOADER_PNG_TARGET} "${MODULE_LOADER_PNG_ROOT_DIR}/lib/cxx/src/*.*")
+  create_library(${MODULE_LOADER_PNG_TARGET} "${MODULE_LOADER_PNG_ROOT_DIR}/lib/cxx/src/*.*")
+  target_link_libraries(${MODULE_LOADER_PNG_TARGET} module_core -L/opt/homebrew/Cellar/libpng/1.6.40/lib -lpng)
+  enable_cxx17(${MODULE_LOADER_PNG_TARGET})
 endif()
-
-target_link_directories(${MODULE_LOADER_PNG_TARGET} PRIVATE ${PNG_LIBRARY})
-target_link_libraries(${MODULE_LOADER_PNG_TARGET} module_core png)
 
 # Добавляем построение тестов
 if(MODULE_LOADER_PNG_ENABLE_TESTS)

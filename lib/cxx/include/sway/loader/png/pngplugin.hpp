@@ -20,16 +20,26 @@ public:
   // clang-format off
   MTHD_OVERRIDE(auto loadFromStream(std::ifstream &source) -> ImageDescriptor);  // clang-format on
 
+  // clang-format off
+  MTHD_OVERRIDE(auto loadFrom(void *buffer, int size) -> ImageDescriptor);  // clang-format on
+
   static void readData(png_structp png, png_bytep data, png_size_t length);
+  static void readAsyncData(png_structp png, png_bytep data, png_size_t length);
 
   static void error(png_structp png, png_const_charp message) {}
 
   static void warning(png_structp png, png_const_charp message) {}
 
 private:
+  auto readSignature_nostream_(void *buffer) -> bool;
+
   void readSignature_(std::ifstream &source);
 
+  auto createInfoStruct_nostream_() -> png_infop;
+
   auto createInfoStruct_(std::ifstream &source) -> png_infop;
+
+  void create_nostream_();
 
   void create_(std::ifstream &source);
 

@@ -110,7 +110,7 @@ set(GLUT_LIBRARY_DIRS "/opt/X11/lib")
 # Добавляем пути для поиска хедеров
 include_directories("${GLUT_INCLUDE_DIRS}")
 include_directories("${MODULE_LOADER_PNG_LIST_DIR}/lib/cxx/include")
-include_directories("${MODULE_LOADER_PNG_LIST_DIR}/submodules/sway.module_loader/include")
+include_directories("${MODULE_LOADER_PNG_LIST_DIR}/submodules/sway.module_loader/api/cxx/include")
 include_directories("${MODULE_LOADER_PNG_LIST_DIR}/submodules/sway.module_core/lib/cxx/include")
 include_directories("${MODULE_LOADER_PNG_LIST_DIR}/submodules/sway.module_math/lib/cxx/include")
 
@@ -184,13 +184,13 @@ if(GLOB_EMSCRIPTEN_PLATFORM)
     enable_cxx17(${target})
 
     target_link_directories(${target} PRIVATE ${PNG_LIBRARY})
-    target_link_libraries(${target} module_core png)
+    # target_link_libraries(${target} module_core -L${GLOB_LIBPNG_ROOT_DIR}/lib -lpng)
 
     printf_link_options(${target})
   endforeach()
 else()
   create_library(${MODULE_LOADER_PNG_TARGET} "${MODULE_LOADER_PNG_ROOT_DIR}/lib/cxx/src/*.*")
-  target_link_libraries(${MODULE_LOADER_PNG_TARGET} module_core -L/opt/homebrew/Cellar/libpng/1.6.40/lib -lpng)
+  target_link_libraries(${MODULE_LOADER_PNG_TARGET} module_core -L/opt/homebrew/Cellar/libpng/1.6.40/lib -lpng16)
   enable_cxx17(${MODULE_LOADER_PNG_TARGET})
 endif()
 

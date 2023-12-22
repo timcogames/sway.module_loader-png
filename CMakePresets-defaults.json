@@ -98,21 +98,65 @@
     },
     {
       "name": "macos-static-mt-debug",
-      "displayName": "macos Dynamic MT Debug",
-      "inherits": "emscripten-dynamic-mt-debug",
+      "displayName": "macos Static MT Debug",
+      "inherits": "base",
       "toolchainFile": "",
       "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        },
         "GLOB_EMSCRIPTEN_PLATFORM": {
           "type": "BOOL",
           "value": false
+        },
+        "MODULE_LOADER_PNG_ENVIRONMENT": {
+          "type": "STRING",
+          "value": "node"
+        },
+        "MODULE_LOADER_PNG_COMPILATION": {
+          "type": "STRING",
+          "value": "async"
         },
         "MODULE_LOADER_PNG_SHARED_LIB": {
           "type": "BOOL",
           "value": false
         },
+        "MODULE_LOADER_PNG_MT": {
+          "type": "BOOL",
+          "value": true
+        },
         "MODULE_LOADER_PNG_ENABLE_TESTS": {
           "type": "BOOL",
           "value": true
+        },
+        "MODULE_LOADER_PNG_ENABLE_COVERAGE": {
+          "type": "BOOL",
+          "value": false
+        },
+        "MODULE_LOADER_PNG_ENABLE_EXAMPLES": {
+          "type": "BOOL",
+          "value": false
+        }
+      }
+    },
+    {
+      "name": "macos-dynamic-mt-release",
+      "displayName": "macos Dynamic MT Release",
+      "inherits": "macos-static-mt-debug",
+      "toolchainFile": "",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        },
+        "MODULE_LOADER_PNG_SHARED_LIB": {
+          "type": "BOOL",
+          "value": true
+        },
+        "MODULE_LOADER_PNG_ENABLE_TESTS": {
+          "type": "BOOL",
+          "value": false
         }
       }
     }
@@ -135,6 +179,12 @@
       "displayName": "Default",
       "configurePreset": "macos-static-mt-debug",
       "configuration": "Debug"
+    },
+    {
+      "name": "default-macos-dynamic-mt-release",
+      "displayName": "Default",
+      "configurePreset": "macos-dynamic-mt-release",
+      "configuration": "Release"
     }
   ],
   "testPresets": [

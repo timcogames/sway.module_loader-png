@@ -109,6 +109,8 @@ set(GLUT_LIBRARY_DIRS "/opt/X11/lib")
 
 # Добавляем пути для поиска хедеров
 include_directories("${GLUT_INCLUDE_DIRS}")
+# include_directories("/Library/Developer/CommandLineTools/usr/include/c++/v1")
+include_directories("/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include")
 include_directories("${MODULE_LOADER_PNG_LIST_DIR}/lib/cxx/include")
 include_directories("${MODULE_LOADER_PNG_LIST_DIR}/submodules/sway.module_loader/api/cxx/include")
 include_directories("${MODULE_LOADER_PNG_LIST_DIR}/submodules/sway.module_core/lib/cxx/include")
@@ -148,15 +150,12 @@ if(GLOB_EMSCRIPTEN_PLATFORM)
     # target_link_options(${target} PUBLIC 
     #   "SHELL:-s STRICT=1")
     # OR
-    target_link_options(${target} PUBLIC 
-      "SHELL:-s BINARYEN_ASYNC_COMPILATION=1")
+    target_link_options(${target} PUBLIC "SHELL:-s BINARYEN_ASYNC_COMPILATION=1")
 
     if(MODULE_LOADER_PNG_ALL_EXPORT)
-      target_link_options(${target} PUBLIC 
-        "SHELL:-s LINKABLE=1") # Полный экспорт
+      target_link_options(${target} PUBLIC "SHELL:-s LINKABLE=1") # Полный экспорт
     else()
-      target_link_options(${target} PUBLIC 
-        "SHELL:-s EXPORTED_FUNCTIONS=@${MODULE_LOADER_PNG_LIB_DIR}/exports.json") # Частичный экспорт
+      target_link_options(${target} PUBLIC "SHELL:-s EXPORTED_FUNCTIONS=@${MODULE_LOADER_PNG_LIB_DIR}/exports.json") # Частичный экспорт
     endif()
 
     if(MODULE_LOADER_PNG_SHARED_LIB)
@@ -189,8 +188,11 @@ if(GLOB_EMSCRIPTEN_PLATFORM)
     printf_link_options(${target})
   endforeach()
 else()
+  # set(CMAKE_CXX_COMPILER "/opt/homebrew/Cellar/gcc/13.2.0/bin/g++-13")
+  set(CMAKE_CXX_COMPILER "/Library/Developer/CommandLineTools/usr/bin/g++")
+
   create_library(${MODULE_LOADER_PNG_TARGET} "${MODULE_LOADER_PNG_ROOT_DIR}/lib/cxx/src/*.*")
-  target_link_libraries(${MODULE_LOADER_PNG_TARGET} module_core -L/opt/homebrew/Cellar/libpng/1.6.40/lib -lpng16)
+  target_link_libraries(${MODULE_LOADER_PNG_TARGET} module_core -L${GLOB_LIBPNG_ROOT_DIR}/lib -lpng16)
   enable_cxx17(${MODULE_LOADER_PNG_TARGET})
 endif()
 

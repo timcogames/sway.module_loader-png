@@ -24,7 +24,7 @@ include("${MODULE_LOADER_PNG_CMAKE_DIR}/enable_cxx17.cmake")
 include("${MODULE_LOADER_PNG_CMAKE_DIR}/add_submodule.cmake")
 include("${MODULE_LOADER_PNG_CMAKE_DIR}/set_compile_definitions.cmake")
 include("${MODULE_LOADER_PNG_CMAKE_DIR}/set_output_dir.cmake")
-include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/create_object.cmake")
+include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/create_object_library.cmake")
 include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/create_interface.cmake")
 include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/clang/create_library.cmake")
 include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/emscripten/setup.cmake")
@@ -41,7 +41,7 @@ include("${MODULE_LOADER_PNG_CMAKE_DIR}/modules/compiler/emscripten/set_modulari
 
 option(GLOB_LIBPNG_ROOT_DIR "" OFF)
 
-option(MODULE_LOADER_PNG_SHARED_LIB "Build shared library (.so)" OFF)
+option(MODULE_LOADER_PNG_LIB_TYPE "Build library type" OFF)
 option(MODULE_LOADER_PNG_ENVIRONMENT "Environment variable" OFF)
 option(MODULE_LOADER_PNG_COMPILATION "Compilation variable" OFF)
 option(MODULE_LOADER_PNG_MT "Enable multithreading" OFF)
@@ -63,6 +63,8 @@ endif()
 
 project_metadata("loader_png" 0.1.0)
 project(${MODULE_LOADER_PNG_PROJ_NAME} VERSION ${MODULE_LOADER_PNG_VERSION} LANGUAGES CXX)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=default -fPIE")
 
 #---------------------------------------------------------------------------------
 # Submodules
@@ -87,7 +89,7 @@ include_directories(${PNG_PNG_INCLUDE_DIR})
 message("[${MODULE_LOADER_PNG_PROJ_NAME}]: ${MODULE_LOADER_PNG_VERSION}
          compiler | ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
        build type | ${CMAKE_BUILD_TYPE}
-       shared lib | ${MODULE_LOADER_PNG_SHARED_LIB}
+         lib type | ${MODULE_LOADER_PNG_LIB_TYPE}
          cxxflags | ${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}
  build type flags | ${BUILD_TYPE_CXX_FLAGS}
         build dir | ${CMAKE_BINARY_DIR}
@@ -124,84 +126,96 @@ file(GLOB_RECURSE MODULE_LOADER_PNG_HEADERS "${MODULE_LOADER_PNG_LIST_DIR}/lib/c
 file(GLOB_RECURSE MODULE_LOADER_PNG_SOURCES "${MODULE_LOADER_PNG_LIST_DIR}/lib/cxx/src/*.*")
 
 #---------------------------------------------------------------------------------
+# Build object library
+#---------------------------------------------------------------------------------
+
+if(NOT TARGET ${MODULE_LOADER_PNG_OBJ_TARGET})
+  set(MODULE_LOADER_PNG_LIB_SOURCES "${MODULE_LOADER_PNG_ROOT_DIR}/lib/cxx/src/*.*")
+  set(MODULE_LOADER_PNG_ENABLE_FILE_EXPORT TRUE)
+
+  create_object_library(${MODULE_LOADER_PNG_OBJ_TARGET} ${MODULE_LOADER_PNG_LIB_SOURCES} ${MODULE_LOADER_PNG_ENABLE_FILE_EXPORT})
+  enable_cxx17(${MODULE_LOADER_PNG_OBJ_TARGET})
+endif()
+
+if(MODULE_LOADER_PNG_ENABLE_TESTS OR MODULE_LOADER_PNG_USE_GMOCK)
+  target_compile_definitions(${MODULE_LOADER_PNG_OBJ_TARGET} PUBLIC -DRENDER_USE_GMOCK)
+endif()
+
+#---------------------------------------------------------------------------------
+# Create interfaces
+#---------------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------------
 # [EMSCRIPTEN] Bitcode
 #---------------------------------------------------------------------------------
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=default -fPIE")
+if(NOT MODULE_LOADER_PNG_LIB_TYPE STREQUAL "object")
+  if(GLOB_EMSCRIPTEN_PLATFORM)
+    create_emscripten_library(${MODULE_LOADER_PNG_LIB_TARGET} ${MODULE_LOADER_PNG_ENVIRONMENT} ${MODULE_LOADER_PNG_COMPILATION} OUTPUT_TARGET_NAME_LIST)
 
-if(GLOB_EMSCRIPTEN_PLATFORM)
-  create_object(${MODULE_LOADER_PNG_TARGET} "${MODULE_LOADER_PNG_ROOT_DIR}/lib/cxx/src/*.*" TRUE)
-else()
-  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -dynamiclib")
-  # create_library(${MODULE_LOADER_PNG_TARGET} "${MODULE_LOADER_PNG_ROOT_DIR}/lib/cxx/src/*.*")
-  # target_link_libraries(${MODULE_LOADER_PNG_TARGET} X11 GL module_core)
-endif()
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --profiling-funcs")
 
-if(GLOB_EMSCRIPTEN_PLATFORM)
-  create_emscripten_library(${MODULE_LOADER_PNG_TARGET} ${MODULE_LOADER_PNG_ENVIRONMENT} ${MODULE_LOADER_PNG_COMPILATION} OUTPUT_TARGET_NAME_LIST)
-
-  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --profiling-funcs")
-
-  foreach(target IN LISTS OUTPUT_TARGET_NAME_LIST)
-    target_link_options(${target} PUBLIC 
-      "SHELL:-s MODULARIZE=1"
-      "SHELL:-s FULL_ES3=1"
-      "SHELL:-s SUPPORT_LONGJMP=0"
-      "SHELL:-s EXPORT_NAME=\"create_loader_png_module\""
-      "SHELL:-s EXPORTED_RUNTIME_METHODS=@${MODULE_LOADER_PNG_LIB_DIR}/runtime-exports.json")
-
-    # target_link_options(${target} PUBLIC 
-    #   "SHELL:-s STRICT=1")
-    # OR
-    target_link_options(${target} PUBLIC "SHELL:-s BINARYEN_ASYNC_COMPILATION=1")
-
-    if(MODULE_LOADER_PNG_ALL_EXPORT)
-      target_link_options(${target} PUBLIC "SHELL:-s LINKABLE=1") # Полный экспорт
-    else()
-      target_link_options(${target} PUBLIC "SHELL:-s EXPORTED_FUNCTIONS=@${MODULE_LOADER_PNG_LIB_DIR}/exports.json") # Частичный экспорт
-    endif()
-
-    if(MODULE_LOADER_PNG_SHARED_LIB)
+    foreach(target IN LISTS OUTPUT_TARGET_NAME_LIST)
       target_link_options(${target} PUBLIC 
-        "SHELL:-shared"
-        "SHELL:-dynamiclib")
+        "SHELL:-s MODULARIZE=1"
+        "SHELL:-s FULL_ES3=1"
+        "SHELL:-s SUPPORT_LONGJMP=0"
+        "SHELL:-s EXPORT_NAME=\"create_loader_png_module\""
+        "SHELL:-s EXPORTED_RUNTIME_METHODS=@${MODULE_LOADER_PNG_LIB_DIR}/runtime-exports.json")
+
+      # target_link_options(${target} PUBLIC 
+      #   "SHELL:-s STRICT=1")
+      # OR
+      target_link_options(${target} PUBLIC "SHELL:-s BINARYEN_ASYNC_COMPILATION=1")
 
       if(MODULE_LOADER_PNG_ALL_EXPORT)
-        target_link_options(${target} PUBLIC "SHELL:-s SIDE_MODULE=2")
+        target_link_options(${target} PUBLIC "SHELL:-s LINKABLE=1") # Полный экспорт
       else()
-        target_link_options(${target} PUBLIC "SHELL:-s SIDE_MODULE=1")
+        target_link_options(${target} PUBLIC "SHELL:-s EXPORTED_FUNCTIONS=@${MODULE_LOADER_PNG_LIB_DIR}/exports.json") # Частичный экспорт
       endif()
-    endif()
 
-    target_link_options(${target} PUBLIC "SHELL:-s USE_LIBPNG=1")
+      if(MODULE_LOADER_PNG_LIB_TYPE STREQUAL "shared")
+        target_link_options(${target} PUBLIC 
+          "SHELL:-shared"
+          "SHELL:-dynamiclib")
 
-    if(MODULE_LOADER_PNG_MT)
-      target_link_options(${target} PUBLIC 
-        "SHELL:-Wl,--shared-memory,--no-check-features"
-        "SHELL:-s USE_PTHREADS=1"
-        "SHELL:-s PTHREAD_POOL_SIZE=8"
-        "SHELL:-s IMPORTED_MEMORY=1")
-    endif()
+        if(MODULE_LOADER_PNG_ALL_EXPORT)
+          target_link_options(${target} PUBLIC "SHELL:-s SIDE_MODULE=2")
+        else()
+          target_link_options(${target} PUBLIC "SHELL:-s SIDE_MODULE=1")
+        endif()
+      endif()
 
-    enable_cxx17(${target})
+      target_link_options(${target} PUBLIC "SHELL:-s USE_LIBPNG=1")
 
-    target_link_directories(${target} PRIVATE ${PNG_LIBRARY})
-    # target_link_libraries(${target} module_core -L${GLOB_LIBPNG_ROOT_DIR}/lib -lpng)
+      if(MODULE_LOADER_PNG_MT)
+        target_link_options(${target} PUBLIC 
+          "SHELL:-Wl,--shared-memory,--no-check-features"
+          "SHELL:-s USE_PTHREADS=1"
+          "SHELL:-s PTHREAD_POOL_SIZE=8"
+          "SHELL:-s IMPORTED_MEMORY=1")
+      endif()
 
-    printf_link_options(${target})
-  endforeach()
-else()
-  # set(CMAKE_CXX_COMPILER "/opt/homebrew/Cellar/gcc/13.2.0/bin/g++-13")
-  set(CMAKE_CXX_COMPILER "/Library/Developer/CommandLineTools/usr/bin/g++")
+      enable_cxx17(${target})
 
-  create_library(${MODULE_LOADER_PNG_TARGET} "${MODULE_LOADER_PNG_ROOT_DIR}/lib/cxx/src/*.*")
-  target_link_libraries(${MODULE_LOADER_PNG_TARGET} module_core -L${GLOB_LIBPNG_ROOT_DIR}/lib -lpng16)
-  enable_cxx17(${MODULE_LOADER_PNG_TARGET})
+      target_link_directories(${target} PRIVATE ${PNG_LIBRARY})
+      # target_link_libraries(${target} module_core -L${GLOB_LIBPNG_ROOT_DIR}/lib -lpng)
+
+      printf_link_options(${target})
+    endforeach()
+  else()
+    # set(CMAKE_CXX_COMPILER "/opt/homebrew/Cellar/gcc/13.2.0/bin/g++-13")
+    set(CMAKE_CXX_COMPILER "/Library/Developer/CommandLineTools/usr/bin/g++")
+
+    create_library(${MODULE_LOADER_PNG_LIB_TARGET} "${MODULE_LOADER_PNG_ROOT_DIR}/lib/cxx/src/*.*")
+    target_link_libraries(${MODULE_LOADER_PNG_LIB_TARGET} module_core_obj -L${GLOB_LIBPNG_ROOT_DIR}/lib -lpng16)
+    enable_cxx17(${MODULE_LOADER_PNG_LIB_TARGET})
+  endif()
 endif()
 
 # Добавляем построение тестов
 if(MODULE_LOADER_PNG_ENABLE_TESTS)
-  if(MODULE_LOADER_PNG_SHARED_LIB)
+  if(MODULE_LOADER_PNG_LIB_TYPE STREQUAL "shared")
     message(STATUS "[${MODULE_LOADER_PNG_PROJ_NAME}]: Tests are only allowed with a static lib")
   else()
     message(STATUS "[${MODULE_LOADER_PNG_PROJ_NAME}]: Tests have been enabled")

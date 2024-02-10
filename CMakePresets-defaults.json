@@ -31,6 +31,10 @@
           "type": "FILEPATH",
           "value": "/Users/apriori85/Documents/Third-party/googletest/build/lib"
         },
+        "MODULE_CORE_LIB_TYPE": {
+          "type": "STRING",
+          "value": "object"
+        },
         "MODULE_CORE_ENVIRONMENT": {
           "type": "STRING",
           "value": "node"
@@ -63,9 +67,9 @@
           "type": "STRING",
           "value": "async"
         },
-        "MODULE_LOADER_PNG_SHARED_LIB": {
-          "type": "BOOL",
-          "value": true
+        "MODULE_LOADER_PNG_LIB_TYPE": {
+          "type": "STRING",
+          "value": "shared"
         },
         "MODULE_LOADER_PNG_MT": {
           "type": "BOOL",
@@ -118,9 +122,9 @@
           "type": "STRING",
           "value": "async"
         },
-        "MODULE_LOADER_PNG_SHARED_LIB": {
-          "type": "BOOL",
-          "value": false
+        "MODULE_LOADER_PNG_LIB_TYPE": {
+          "type": "STRING",
+          "value": "shared"
         },
         "MODULE_LOADER_PNG_MT": {
           "type": "BOOL",

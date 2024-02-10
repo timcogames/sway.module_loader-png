@@ -16,7 +16,7 @@ include_directories("${GTEST_INC_DIR}")
 file(GLOB MODULE_LOADER_PNG_SOURCE_TESTS "${PROJECT_SOURCE_DIR}/*.spec.cpp")
 
 add_executable(${META_LOADER_PNG_EXENAME_TESTS} ${MODULE_LOADER_PNG_SOURCE_TESTS} "${GTEST_SRC_DIR}/gtest_main.cc")
-target_link_libraries(${META_LOADER_PNG_EXENAME_TESTS} module_loader_png module_core pthread ${GLOB_GTEST_LIB_DIR}/libgtest.a)
+target_link_libraries(${META_LOADER_PNG_EXENAME_TESTS} module_loader_png_obj module_core_obj pthread -L${GLOB_LIBPNG_ROOT_DIR}/lib -lpng16 ${GLOB_GTEST_LIB_DIR}/libgtest.a)
 
 enable_cxx17(${META_LOADER_PNG_EXENAME_TESTS})
 

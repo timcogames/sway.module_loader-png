@@ -48,10 +48,10 @@ auto PNGPlugin::readSignature_nostream_(void *buffer) -> bool {
 
 void PNGPlugin::readSignature_(std::ifstream &source) {
   std::array<std::byte, PNG_SIGNATURE_SIZE> signature;
-  s32_t successed = 0;  // Результат проверки сигнатуры.
+  i32_t successed = 0;  // Результат проверки сигнатуры.
 
   // Считываем сигнатуру (первые PNG_SIGNATURE_SIZE байт).
-  source.read((s8_t *)signature.data(), PNG_SIGNATURE_SIZE);
+  source.read((lpstr_t)signature.data(), PNG_SIGNATURE_SIZE);
 
   // Проверяем на соответствие считанной нами сигнатуры с сигнатурой PNG-формата.
   successed = png_sig_cmp(reinterpret_cast<png_bytep>(signature.data()), 0, PNG_SIGNATURE_SIZE);

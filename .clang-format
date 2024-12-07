@@ -26,20 +26,68 @@ IncludeCategories:
     Priority:        1
   - Regex:           '^<sway/.*\.hpp>'
     Priority:        2
-  - Regex:           '<(catch2|boost|gtest)\/'
+  - Regex:           '^<google/.*\.hpp>'
     Priority:        3
-  - Regex:           '^<.*'
+  - Regex:           '<(catch2|boost|gtest|gmock)\/'
     Priority:        4
-    SortPriority:    4
+  - Regex:           '^<.*'
+    Priority:        5
+    SortPriority:    5
     CaseSensitive:   true
 IndentPPDirectives: AfterHash
 AlignEscapedNewlines: Left
+MacroBlockBegin:
+  "^NAMESPACE_BEGIN|\
+    NS_BEGIN(.*)|\
+    EMSCRIPTEN_BINDING_BEGIN$"
+MacroBlockEnd: 
+  "^NAMESPACE_END|\
+    NS_END|\
+    EMSCRIPTEN_BINDING_END$"
+Macros:
+  - PURE_VIRTUAL(x)=x
+  - MTHD_VIRTUAL(x)=x
+  - MTHD_OVERRIDE(x)=x
+  - MTHD_VIRTUAL_OVERRIDE(x)=x
 TypenameMacros:
   - NAMESPACE_BEGIN
   - NAMESPACE_END
+  - NS_BEGIN
+  - NS_BEGIN_SWAY
+  - NS_END
+  - NS_SHORT
+  - NS_SHORT_SWAY
+  - NS_ALIAS
+  - NS_ALIAS_SWAY
+  - DECLARE_ENUM
+  - DECLARE_ENUM_EXT
+  - DECLARE_ENUM_IDX
   - PURE_VIRTUAL
+  - MTHD_VIRTUAL
   - MTHD_OVERRIDE
+  - MTHD_VIRTUAL_OVERRIDE
+  - DTOR_DEFAULT
+  - DTOR_VIRTUAL
+  - DTOR_VIRTUAL_DEFAULT
+  - DECLARE_SUPERCLASS
+  - DECLARE_CLASS_METADATA
+  - DECLARE_PTR
+  - DECLARE_UNIQUE_PTR
+  - DECLARE_WEAK_PTR
+  - DECLARE_SHARED_PTR
+  - DECLARE_JAVASCRIPT_PTR
+  - DECLARE_PTR_TYPES
+  - DECLARE_PTR_ALIAS
+  - DECLARE_UNIQUE_PTR_ALIAS
+  - DECLARE_WEAK_PTR_ALIAS
+  - DECLARE_SHARED_PTR_ALIAS
+  - DECLARE_JAVASCRIPT_PTR_ALIAS
+  - DECLARE_PTR_ALIASES
   - DECLARE_EVENT
-  - TEST_F
+  - DECLARE_EMSCRIPTEN
+  - DECLARE_EMSCRIPTEN_BINDING
+  - EMSCRIPTEN_BINDING_BEGIN
+  - EMSCRIPTEN_BINDING_END
   - TEST
+  - TEST_F
 AlwaysBreakTemplateDeclarations: true

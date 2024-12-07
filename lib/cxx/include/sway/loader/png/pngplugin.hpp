@@ -7,28 +7,39 @@
 
 #include <png.h>
 
-NAMESPACE_BEGIN(sway)
-NAMESPACE_BEGIN(loader)
-NAMESPACE_BEGIN(png)
+NS_BEGIN_SWAY()
+NS_BEGIN(loader)
+NS_BEGIN(png)
 
-class PNGPlugin : public ImageLoaderPlugin {
+class PNGPlugin final : public ImageLoaderPlugin {
 public:
-  PNGPlugin() = default;
-
-  virtual ~PNGPlugin() = default;
-
-  // clang-format off
-  MTHD_OVERRIDE(auto loadFromStream(std::ifstream &source) -> ImageDescriptor);  // clang-format on
-
-  // clang-format off
-  MTHD_OVERRIDE(auto loadFrom(void *buffer, int size) -> ImageDescriptor);  // clang-format on
+#pragma region "Static methods"
 
   static void readData(png_structp png, png_bytep data, png_size_t length);
+
   static void readAsyncData(png_structp png, png_bytep data, png_size_t length);
 
   static void error(png_structp png, png_const_charp message) {}
 
   static void warning(png_structp png, png_const_charp message) {}
+
+#pragma endregion
+
+#pragma region "Ctors/Dtor"
+
+  PNGPlugin() = default;
+
+  DTOR_VIRTUAL_DEFAULT(PNGPlugin);
+
+#pragma endregion
+
+#pragma region "Overridden ImageLoaderPlugin methods"
+
+  MTHD_OVERRIDE(auto loadFromStream(std::ifstream &source) -> ImageDescriptor);
+
+  MTHD_OVERRIDE(auto loadFrom(void *buffer, int size) -> ImageDescriptor);
+
+#pragma endregion
 
 private:
   auto readSignature_nostream_(void *buffer) -> bool;
@@ -50,8 +61,8 @@ private:
   png_infop endInfo_;
 };
 
-NAMESPACE_END(png)
-NAMESPACE_END(loader)
-NAMESPACE_END(sway)
+NS_END()  // namespace png
+NS_END()  // namespace loader
+NS_END()  // namespace sway
 
 #endif  // SWAY_LOADER_PNG_PNGPLUGIN_HPP

@@ -5,9 +5,9 @@
 #define PNG_SIGNATURE_SIZE 8  // Длина сигнатуры.
 #define PNG_INFOPP_NULL (png_infopp) nullptr
 
-NAMESPACE_BEGIN(sway)
-NAMESPACE_BEGIN(loader)
-NAMESPACE_BEGIN(png)
+NS_BEGIN(sway)
+NS_BEGIN(loader)
+NS_BEGIN(png)
 
 // clang-format off
 DECLARE_LOADER_PLUGIN(PNGPlugin, "png", 
@@ -330,6 +330,6 @@ auto PNGPlugin::loadFrom(void *buffer, int size_tmp) -> ImageDescriptor {
   return descriptor;
 }
 
-NAMESPACE_END(png)
-NAMESPACE_END(loader)
-NAMESPACE_END(sway)
+NS_END()  // namespace png
+NS_END()  // namespace loader
+NS_END()  // namespace sway

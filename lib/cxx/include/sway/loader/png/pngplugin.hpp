@@ -2,22 +2,28 @@
 #define SWAY_LOADER_PNG_PNGPLUGIN_HPP
 
 #include <sway/core.hpp>
+#include <sway/emscriptenmacros.hpp>
 #include <sway/loader.hpp>
+#include <sway/loader/png/pngpluginprivate.hpp>
 #include <sway/math.hpp>
 
 #include <png.h>
 
-NS_BEGIN_SWAY()
-NS_BEGIN(loader)
-NS_BEGIN(png)
+namespace sway::loader::png {
 
 class PNGPlugin final : public ImageLoaderPlugin {
+  DECLARE_EMSCRIPTEN_BINDING()
+
 public:
 #pragma region "Static methods"
 
   static void readData(png_structp png, png_bytep data, png_size_t length);
 
   static void readAsyncData(png_structp png, png_bytep data, png_size_t length);
+
+  static void writeData(png_structp png, png_bytep data, png_size_t length);
+
+  static void flushData(png_structp png);
 
   static void error(png_structp png, png_const_charp message) {}
 
@@ -29,7 +35,7 @@ public:
 
   PNGPlugin() = default;
 
-  DTOR_VIRTUAL_DEFAULT(PNGPlugin);
+  virtual ~PNGPlugin() = default;
 
 #pragma endregion
 
@@ -38,6 +44,16 @@ public:
   MTHD_OVERRIDE(auto loadFromStream(std::ifstream &source) -> ImageDescriptor);
 
   MTHD_OVERRIDE(auto loadFrom(void *buffer, int size) -> ImageDescriptor);
+
+#ifdef EMSCRIPTEN_PLATFORM
+  auto loadFromArrayBuffer(emscripten::val buf) -> ImageDescriptor;
+
+  void setCustomPalette(ImageDescriptor &desc, const emscripten::val &colors);
+
+  auto getImageDescriptor() -> ImageDescriptor;
+
+  auto saveToIndexedArrayBuffer(ImageDescriptor &desc) -> emscripten::val;
+#endif
 
 #pragma endregion
 
@@ -56,13 +72,18 @@ private:
 
   void getImageSizeInfo_(math::size2i_t &size);
 
-  png_structp png_;
-  png_infop info_;
+  void transformation_(png_byte colorType, png_byte bitDepth, png_byte *channels, png_byte *bitsPerChannel);
+
+  void analyzeColors_(ImageDescriptor &descriptor, u8_t *imgData, const math::size2i_t size, int channels);
+
+  PNGPluginPrivate reader_;
+  PNGPluginPrivate writer_;
+
+  ImageDescriptor descriptor_;
+
   png_infop endInfo_;
 };
 
-NS_END()  // namespace png
-NS_END()  // namespace loader
-NS_END()  // namespace sway
+}  // namespace sway::loader::png
 
 #endif  // SWAY_LOADER_PNG_PNGPLUGIN_HPP

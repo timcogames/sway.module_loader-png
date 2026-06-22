@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "target": "es6",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "removeComments": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "typeRoots": [ "./node_modules/@types" ],
+    "types": [ "jest", "node" ],
+    "lib": [ "esnext", "dom" ],
+    "paths": {
+      "@core/*" : [ "./src/*" ],
+      "@png/*" : [ "./src/*" ]
+    }
+  }
+}

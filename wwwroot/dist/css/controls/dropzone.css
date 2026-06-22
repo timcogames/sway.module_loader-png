@@ -1,0 +1,14 @@
+:root {}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 140px;
+  border: 1px dashed var(--color-gray-600);
+  border-radius: 3px;
+  background-color: var(--color-gray-300);
+  cursor: pointer;
+}

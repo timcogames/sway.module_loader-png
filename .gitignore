@@ -1,6 +1,7 @@
 # project output files
 /build
 /bin
+/lib/web/node_modules
 
 # osx noise
 .DS_Store

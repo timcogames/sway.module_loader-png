@@ -1,0 +1,623 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=PT+Serif&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="./wwwroot/dist/css/libmodule.css">
+  <link rel="stylesheet" href="./wwwroot/dist/css/controls/button.css">
+  <link rel="stylesheet" href="./wwwroot/dist/css/controls/topbar.css">
+  <link rel="stylesheet" href="./wwwroot/dist/css/controls/dropzone.css">
+  <title></title>
+</head>
+
+<body>
+  <header>
+    <div class="topbar-wrapper">
+      <nav class="topbar">
+        <h1 class="heading">PNG Image Analyzer</h1>
+        <button id="png_save_image" class="button-primary" disabled>Сохранить</button>
+      </nav>
+    </div>
+  </header>
+  <div id="wrap" class="content">
+    <section class="section_product-hero"></section>
+    <section class="section_product-content">
+      <div class="horz-padding vert-padding-section-xsmall">
+        <div class="container-xlarge">
+          <div>
+            <label class="text-sm font-medium block mb-2">Image Source</label>
+            <div>
+              <label for="png_file_upload" class="dropzone">
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+                  class="text-muted-foreground mb-2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <p class="text-sm text-center font-medium mb-1">Drag &amp; drop image or click to upload</p>
+                <p class="text-xs text-center text-muted-foreground">Supported formats: PNG (max 10MB)</p>
+              </label>
+              <input id="png_file_upload" type="file" accept=".png,.PNG" hidden />
+            </div>
+          </div>
+
+          <img id="pngImagePreview" class="preview" alt="Preview"
+            src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" />
+
+          <div class="descr">
+            <dl id="pngImageInfo" class="info"></dl>
+
+            <div>
+              <!-- Палитра цветов -->
+              <div class="mt-4">
+                <h3 class="text-sm font-semibold mb-2">Палитра цветов</h3>
+                <ul id="pngPaletteColors" class="palette-card_colors"></ul>
+              </div>
+
+              <!-- Уникальные цвета -->
+              <div class="mt-4">
+                <h3 class="text-sm font-semibold mb-2">Уникальные цвета</h3>
+                <ul id="pngUniqueColors" class="palette-card_colors"></ul>
+              </div>
+            </div>
+
+            <!-- Пользовательская палитра -->
+            <div class="mt-4">
+              <h3 class="text-sm font-semibold mb-2">Пользовательская палитра</h3>
+              <!-- Палитра выбора -->
+              <div class="palette-select-container mb-3">
+                <label for="palette-select" class="text-sm font-medium block mb-1">Выберите палитру:</label>
+                <select id="palette-select" name="select" class="w-full p-2 border rounded max-w-xs">
+                  <option value="PAL0.pal" selected>PAL0 (Базовая)</option>
+                  <option value="PAL1.pal">PAL1 (Яркие цвета)</option>
+                  <option value="PAL2.pal">PAL2 (BG+ENV)</option>
+                  <option value="PAL3.pal">PAL3 (HUD)</option>
+                  <option value="custom">Custom (Текущая)</option>
+                </select>
+                <div id="palette-loading" class="text-xs text-gray-500 mt-1 hidden">Загрузка палитры...</div>
+                <div id="palette-error" class="text-xs text-red-500 mt-1 hidden"></div>
+              </div>
+
+              <ul id="png_custom_palette" class="palette-card_colors"></ul>
+
+              <!-- Кнопки управления палитрой -->
+              <div class="mt-4 mb-2 flex gap-2">
+                <button id="png_add_col" class="button-secondary" disabled>Добавить цвет</button>
+                <button id="png_rem_col" class="button-secondary" disabled>Удалить цвет</button>
+                <button id="png_clr_pal" class="button-secondary" disabled>Очистить палитру</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="./wwwroot/dist/js/analizer.js"></script>
+
+  <script type="module">
+    import create_loader_png_module from "./wwwroot/dist/module_loader_png_wasm_web_async.js";
+
+    let moduleInstance = null;
+    let pluginImageProvider = null;
+    let currentImageDescriptor = null;
+    let customPalette = [];
+    let selectedColorIndex = -1;
+    let currentPaletteFile = 'PAL0.pal';
+
+    let instance = create_loader_png_module({
+      locateFile: function (path) {
+        const baseURL = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf("/"));
+        return baseURL + '/wwwroot/dist/' + path;
+      }
+    });
+
+    instance.then((module) => {
+      moduleInstance = module;
+      console.log("WASM module loaded successfully");
+
+      document.getElementById('png_save_image').addEventListener('click', handleSave);
+
+      document.getElementById('png_file_upload').addEventListener('change', handleFileSelect);
+      document.getElementById('palette-select').addEventListener('change', handlePaletteSelect);
+
+      document.getElementById('png_add_col').addEventListener('click', handleAddColor);
+      document.getElementById('png_rem_col').addEventListener('click', handleRemColor);
+      document.getElementById('png_clr_pal').addEventListener('click', handleClearPalette);
+
+      // Загружаем палитру по умолчанию при загрузке страницы
+      loadPaletteFromFile('PAL0.pal');
+    });
+
+    async function loadPaletteFromFile(filename) {
+      if (filename === 'custom') {
+        // Не загружаем новую палитру, оставляем текущую
+        updatePaletteButtons();
+        return;
+      }
+
+      const loadingElement = document.getElementById('palette-loading');
+      const errorElement = document.getElementById('palette-error');
+
+      loadingElement.classList.remove('hidden');
+      errorElement.classList.add('hidden');
+
+      try {
+        const response = await fetch(`./wwwroot/palettes/${filename}`);
+
+        if (!response.ok) {
+          throw new Error(`Failed to load palette file: ${response.status}`);
+        }
+
+        const text = await response.text();
+        const palette = parsePALFile(text);
+
+        if (palette.length > 0) {
+          customPalette = palette;
+          currentPaletteFile = filename;
+
+          // Обновляем интерфейс
+          selectedColorIndex = -1;
+          updateCustomPaletteDisplay();
+          updatePaletteButtons();
+
+          // Обновляем палитру в плагине, если изображение загружено
+          if (currentImageDescriptor) {
+            updatePluginPalette();
+          }
+
+          console.log(`Palette loaded from ${filename}: ${palette.length} colors`);
+        } else {
+          throw new Error('Invalid palette file format');
+        }
+      } catch (error) {
+        console.error('Error loading palette:', error);
+        errorElement.textContent = `Ошибка загрузки палитры: ${error.message}`;
+        errorElement.classList.remove('hidden');
+
+        // Восстанавливаем предыдущий выбор
+        document.getElementById('palette-select').value = currentPaletteFile;
+      } finally {
+        loadingElement.classList.add('hidden');
+      }
+    }
+
+    function parsePALFile(content) {
+      const lines = content.trim().split('\n');
+      const palette = [];
+
+      // Проверяем формат JASC-PAL
+      if (lines.length < 4 || lines[0] !== 'JASC-PAL') {
+        console.warn('Invalid JASC-PAL format');
+        return palette;
+      }
+
+      // Пропускаем заголовок
+      let lineIndex = 3; // Начинаем с строки с цветами
+
+      for (let i = lineIndex; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line === '') continue;
+
+        const rgb = line.split(/\s+/).map(Number);
+
+        if (rgb.length >= 3) {
+          const r = Math.min(255, Math.max(0, rgb[0]));
+          const g = Math.min(255, Math.max(0, rgb[1]));
+          const b = Math.min(255, Math.max(0, rgb[2]));
+
+          // Конвертируем RGB в HEX
+          const hexColor = rgbToHex(r, g, b);
+          palette.push(hexColor);
+        }
+      }
+
+      return palette;
+    }
+
+    function rgbToHex(r, g, b) {
+      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+    }
+
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    }
+
+    // function setPalette_0() {
+    //   customPalette = [];
+    //   customPalette.push('#ff00ff'); //!< transparent color
+
+    //   customPalette.push('#FFFFFF');
+    //   customPalette.push('#000000');
+    //   // #242424
+    //   // #484848
+    //   // #6D6D6D
+    //   // #929292
+    //   customPalette.push('#FFDBB6');
+    //   customPalette.push('#DBB692');
+    //   customPalette.push('#B6926D');
+    //   customPalette.push('#926D48');
+    //   customPalette.push('#DBB6B6');
+    //   customPalette.push('#B69292');
+    //   customPalette.push('#926D6D');
+    //   customPalette.push('#6D4848');
+    //   // #482424
+    //   customPalette.push('#6D9292');
+    //   customPalette.push('#486D6D');
+    //   customPalette.push('#244848');
+    //   // #486DFF
+    //   customPalette.push('#DBDBB6');
+    //   customPalette.push('#B6B692');
+    // }
+
+    // function setPalette_1() {
+    //   customPalette = [];
+    //   customPalette.push('#ff00ff'); //!< transparent color
+
+    //   customPalette.push('#FFFFFF');
+    //   customPalette.push('#000000');
+
+    //   customPalette.push('#DB6D24');
+    //   customPalette.push('#FFB600');
+    //   customPalette.push('#FFFF24');
+    //   customPalette.push('#FFFF6D');
+    // }
+
+    // function setPalette_2() {
+    //   customPalette = [];
+    //   customPalette.push('#ff00ff'); //!< transparent color
+    // }
+
+    // function setPalette_3() {
+    //   customPalette = [];
+    //   customPalette.push('#ff00ff'); //!< transparent color
+    // }
+
+    // function applyPalette(paletteType) {
+    //   switch (paletteType) {
+    //     case 0:
+    //       setPalette_0();
+    //       break;
+    //     case 1:
+    //       setPalette_1();
+    //       break;
+    //     case 2:
+    //       setPalette_2();
+    //       break;
+    //     case 3:
+    //       setPalette_3();
+    //       break;
+    //     default:
+    //       setPalette_0();
+    //   }
+    // }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) {
+        return;
+      }
+
+      if (file.type !== 'image/png') {
+        alert('Please select a PNG file');
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        if (!moduleInstance) {
+          alert('WASM module not loaded yet');
+          return;
+        }
+
+        try {
+          // Создаем превью изображения.
+          const preview = document.getElementById('pngImagePreview');
+          const objectURL = URL.createObjectURL(file);
+          preview.src = objectURL;
+          preview.style.display = 'block';
+
+          const arrayBuffer = e.target.result;
+          pluginImageProvider = new moduleInstance.PNGPlugin();
+
+          currentImageDescriptor = pluginImageProvider.loadFromArrayBuffer(arrayBuffer);
+
+          displayImageInfo(currentImageDescriptor, file);
+
+          // Активируем кнопки.
+          document.getElementById('png_save_image').disabled = false;
+          document.getElementById('png_add_col').disabled = false;
+
+          // Применяем выбранную палитру при загрузке нового изображения.
+          // applyPalette(currentPaletteType);
+
+          selectedColorIndex = -1;
+          updateCustomPaletteDisplay();
+          updatePaletteButtons();
+          updatePluginPalette();
+        } catch (error) {
+          console.error('Error analyzing PNG:', error);
+          alert('Error analyzing PNG file: ' + error.message);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    function handlePaletteSelect(event) {
+      const paletteFile = event.target.value;
+      loadPaletteFromFile(paletteFile);
+    }
+
+    // function handlePaletteSelect(event) {
+    //   const paletteType = parseInt(event.target.value);
+    //   currentPaletteType = paletteType;
+
+    //   if (!currentImageDescriptor) {
+    //     return;
+    //   }
+
+    //   // Применяем выбранную палитру.
+    //   applyPalette(paletteType);
+
+    //   // Обновляем отображение.
+    //   updateCustomPaletteDisplay();
+    //   updatePaletteButtons();
+    //   updatePluginPalette();
+    // }
+
+    function highlightSelectedColor() {
+      // Убираем выделение со всех элементов.
+      const colorItems = document.querySelectorAll('#png_custom_palette .color-item');
+      colorItems.forEach(item => {
+        item.classList.remove('selected');
+      });
+
+      // Добавляем выделение к выбранному элементу.
+      if (selectedColorIndex >= 0) {
+        const selectedItem = document.querySelector(`#png_custom_palette .color-item:nth-child(${selectedColorIndex + 1})`);
+        if (selectedItem) {
+          selectedItem.classList.add('selected');
+        }
+      }
+    }
+
+    function handleAddColor() {
+      if (!currentImageDescriptor) {
+        alert('No image loaded');
+        return;
+      }
+
+      // Получаем случайный цвет из палитры изображения
+      const colorAnalysis = currentImageDescriptor.colorAnalysis;
+      if (colorAnalysis.uniqueColors.size() === 0) {
+        alert('No colors available in the image');
+        return;
+      }
+
+      // Выбираем случайный цвет из уникальных цветов изображения.
+      const randomIndex = Math.floor(Math.random() * colorAnalysis.uniqueColors.size());
+      const color = colorAnalysis.uniqueColors.get(randomIndex);
+
+      // Пропускаем прозрачные цвета.
+      if (color.getA() === 0) {
+        handleAddColor(); // Рекурсивно пробуем еще раз.
+        return;
+      }
+
+      const hexColor = rgbToHex(color.getR(), color.getG(), color.getB());
+
+      // Добавляем цвет в пользовательскую палитру, если его там еще нет.
+      if (!customPalette.includes(hexColor)) {
+        customPalette.push(hexColor);
+        updateCustomPaletteDisplay();
+        updatePaletteButtons();
+        updatePluginPalette();
+
+        selectedColorIndex = customPalette.length - 1;
+        highlightSelectedColor();
+
+        // pluginImageProvider.setCustomPalette(currentImageDescriptor, customPalette);
+        // document.getElementById('png_palette_count').textContent = pluginImageProvider.getImageDescriptor().paletteCount;
+        // document.getElementById('png_colors_per_palette').textContent = pluginImageProvider.getImageDescriptor().colorsPerPalette;
+      } else {
+        alert('Цвет уже есть в палитре');
+      }
+    }
+
+    function updatePaletteButtons() {
+      const removeButton = document.getElementById('png_rem_col');
+      const clearButton = document.getElementById('png_clr_pal');
+
+      removeButton.disabled = selectedColorIndex === -1 || selectedColorIndex === 0;
+      clearButton.disabled = customPalette.length <= 1; // Оставляем прозрачный цвет.
+    }
+
+    function updatePluginPalette() {
+      if (pluginImageProvider && currentImageDescriptor) {
+        pluginImageProvider.setCustomPalette(currentImageDescriptor, customPalette);
+
+        // Обновляем информацию о палитре в интерфейсе.
+        const updatedDescriptor = pluginImageProvider.getImageDescriptor();
+        if (document.getElementById('png_palette_count')) {
+          document.getElementById('png_palette_count').textContent = updatedDescriptor.paletteCount;
+        }
+        if (document.getElementById('png_colors_per_palette')) {
+          document.getElementById('png_colors_per_palette').textContent = updatedDescriptor.colorsPerPalette;
+        }
+      }
+    }
+
+    function updateCustomPaletteDisplay() {
+      const customPaletteContainer = document.getElementById('png_custom_palette');
+      customPaletteContainer.innerHTML = '';
+
+      customPalette.forEach((hexColor, index) => {
+        const colorListItem = document.createElement('li');
+        colorListItem.className = `color-item ${index === selectedColorIndex ? 'selected' : ''}`;
+        colorListItem.innerHTML = `
+          <div class="color-box">
+            <div class="color" style="background-color: ${hexColor};"></div>
+            <input class="name selectable" type="text" value="${hexColor}" 
+                   data-index="${index}"
+                   ${index === 0 ? 'readonly' : ''}>
+          </div>
+        `;
+
+        // Добавляем обработчики событий
+        const colorElement = colorListItem.querySelector('.color');
+        const inputElement = colorListItem.querySelector('input');
+
+        // Клик на цветовой элемент - выбор цвета
+        colorElement.addEventListener('click', () => {
+          selectedColorIndex = index;
+          highlightSelectedColor();
+          updatePaletteButtons();
+        });
+
+        // Клик на сам элемент списка тоже должен выделять цвет.
+        colorListItem.addEventListener('click', (evt) => {
+          if (evt.target === colorListItem || evt.target === colorElement) {
+            selectedColorIndex = index;
+            highlightSelectedColor();
+            updatePaletteButtons();
+          }
+        });
+
+        // Изменение значения в input
+        inputElement.addEventListener('change', (e) => {
+          handleColorInputChange(e.target, index);
+        });
+
+        // Enter для подтверждения изменения
+        inputElement.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.target.blur();
+          }
+        });
+
+        // Двойной клик для редактирования
+        inputElement.addEventListener('dblclick', (e) => {
+          if (index !== 0) { // Не разрешаем редактировать прозрачный цвет
+            e.target.readOnly = false;
+            e.target.select();
+          }
+        });
+
+        customPaletteContainer.appendChild(colorListItem);
+      });
+    }
+
+    function handleColorInputChange(inputElement, index) {
+      if (index === 0) {
+        return; // Не разрешаем изменять прозрачный цвет
+      }
+
+      const newColor = inputElement.value.trim();
+
+      // Проверяем валидность HEX цвета.
+      if (!isValidHexColor(newColor)) {
+        alert('Неверный формат цвета. Используйте формат #RRGGBB');
+        inputElement.value = customPalette[index]; // Восстанавливаем старое значение.
+        return;
+      }
+
+      // Проверяем, нет ли такого цвета уже в палитре.
+      if (customPalette.includes(newColor) && newColor !== customPalette[index]) {
+        alert('Этот цвет уже есть в палитре');
+        inputElement.value = customPalette[index]; // Восстанавливаем старое значение.
+        return;
+      }
+
+      // Обновляем цвет в палитре.
+      customPalette[index] = newColor;
+
+      // Обновляем отображение цвета.
+      const colorElement = inputElement.closest('.color-item').querySelector('.color');
+      colorElement.style.backgroundColor = newColor;
+
+      // Делаем input снова readonly.
+      inputElement.readOnly = true;
+
+      // Обновляем палитру в плагине.
+      updatePluginPalette();
+    }
+
+    function handleRemColor() {
+      if (selectedColorIndex === -1) {
+        alert('Выберите цвет для удаления');
+        return;
+      }
+
+      customPalette.splice(selectedColorIndex, 1);
+      selectedColorIndex = -1;
+      highlightSelectedColor();
+      updateCustomPaletteDisplay();
+      updatePaletteButtons();
+      updatePluginPalette();
+    }
+
+    function handleClearPalette() {
+      if (customPalette.length === 0) {
+        return;
+      }
+
+      if (confirm('Очистить всю палитру?')) {
+        customPalette = [];
+        customPalette.push('#ff00ff'); //!< transparent color.
+
+        selectedColorIndex = -1;
+        highlightSelectedColor();
+        updateCustomPaletteDisplay();
+        updatePaletteButtons();
+        updatePluginPalette();
+      }
+    }
+
+    function handleSave() {
+      if (!currentImageDescriptor || !moduleInstance) {
+        alert('No image loaded');
+        return;
+      }
+
+      try {
+        // const indexedPNGData = pluginImageProvider.saveToIndexedArrayBuffer(currentImageDescriptor);
+        const indexedPNGData = pluginImageProvider.saveToIndexedArrayBuffer(pluginImageProvider.getImageDescriptor());
+
+        // Создаем Blob и скачиваем файл.
+        const blob = new Blob([indexedPNGData], { type: 'image/png' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'indexed_image.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        URL.revokeObjectURL(url);
+
+        alert('Indexed PNG saved successfully!');
+      } catch (error) {
+        console.error('Error saving indexed PNG:', error);
+        alert('Error saving indexed PNG: ' + error.message);
+      }
+    }
+  </script>
+</body>
+
+</html>

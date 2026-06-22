@@ -71,15 +71,7 @@
           "type": "STRING",
           "value": "shared"
         },
-        "MODULE_LOADER_PNG_MT": {
-          "type": "BOOL",
-          "value": true
-        },
         "MODULE_LOADER_PNG_ENABLE_TESTS": {
-          "type": "BOOL",
-          "value": false
-        },
-        "MODULE_LOADER_PNG_ENABLE_COVERAGE": {
           "type": "BOOL",
           "value": false
         },
@@ -126,17 +118,9 @@
           "type": "STRING",
           "value": "shared"
         },
-        "MODULE_LOADER_PNG_MT": {
-          "type": "BOOL",
-          "value": true
-        },
         "MODULE_LOADER_PNG_ENABLE_TESTS": {
           "type": "BOOL",
           "value": true
-        },
-        "MODULE_LOADER_PNG_ENABLE_COVERAGE": {
-          "type": "BOOL",
-          "value": false
         },
         "MODULE_LOADER_PNG_ENABLE_EXAMPLES": {
           "type": "BOOL",
@@ -154,13 +138,13 @@
           "type": "STRING",
           "value": "Release"
         },
-        "MODULE_LOADER_PNG_SHARED_LIB": {
-          "type": "BOOL",
-          "value": true
+        "MODULE_LOADER_PNG_LIB_TYPE": {
+          "type": "STRING",
+          "value": "shared"
         },
         "MODULE_LOADER_PNG_ENABLE_TESTS": {
           "type": "BOOL",
-          "value": false
+          "value": "false"
         }
       }
     }

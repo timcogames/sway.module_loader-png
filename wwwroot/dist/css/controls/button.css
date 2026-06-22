@@ -1,0 +1,17 @@
+:root {}
+
+.button-primary,
+.button-secondary {
+  color: var(--color-white);
+  background: var(--color-gray-800);
+  border: 1px solid var(--color-gray-800);
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.button-primary[disabled],
+.button-secondary[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

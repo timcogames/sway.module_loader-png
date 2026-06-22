@@ -1,0 +1,12 @@
+#ifndef SWAY_LOADER_PNG_DEFINES_HPP
+#define SWAY_LOADER_PNG_DEFINES_HPP
+
+#define PNG_SIGNATURE_SIZE 8  //!< Длина сигнатуры.
+#define PNG_INFOPP_NULL (png_infopp) nullptr
+
+#define PNG_PALETTE_SIZE 16
+
+#define PNG_COLOR_CHANNEL_MIN 0
+#define PNG_COLOR_CHANNEL_MAX 255
+
+#endif  // SWAY_LOADER_PNG_DEFINES_HPP

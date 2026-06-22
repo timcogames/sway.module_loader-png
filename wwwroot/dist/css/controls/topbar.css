@@ -1,0 +1,25 @@
+:root {
+  --topbar-height: 62px;
+  --topbar-border-color: #eaeaea;
+  --topbar-background-color: #f8f8f8;
+}
+
+.topbar-wrapper {
+  border-bottom: 1px solid var(--topbar-border-color);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  height: var(--topbar-height);
+  background-color: var(--topbar-background-color);
+}
+
+.topbar {
+  display: flex;
+  width: 100%;
+  max-width: 1440px;
+  height: inherit;
+  align-items: safe center;
+  justify-content: space-between;
+  padding: 0 1rem;
+}
